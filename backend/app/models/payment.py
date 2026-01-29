@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import TYPE_CHECKING
 from decimal import Decimal
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String
@@ -8,6 +9,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import Base
 from .utils import utcnow
+
+if TYPE_CHECKING:
+    from .menu import Menu
+    from .user import User
 
 
 class Payment(Base):

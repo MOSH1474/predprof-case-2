@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import Base
 from .associations import dish_allergies
+
+if TYPE_CHECKING:
+    from .allergy import Allergy
+    from .menu_item import MenuItem
+    from .review import Review
 
 
 class Dish(Base):

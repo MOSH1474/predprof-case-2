@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Enum as SAEnum, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -9,6 +10,16 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..db import Base
 from .associations import user_allergies
 from .utils import utcnow
+
+if TYPE_CHECKING:
+    from .allergy import Allergy
+    from .inventory_transaction import InventoryTransaction
+    from .meal_issue import MealIssue
+    from .notification import Notification
+    from .payment import Payment
+    from .purchase_request import PurchaseRequest
+    from .review import Review
+    from .user_notification import UserNotification
 
 
 class UserRole(str, Enum):

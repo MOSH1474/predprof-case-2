@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import TYPE_CHECKING
 from decimal import Decimal
 
 from sqlalchemy import Date, DateTime, Integer, Numeric, String, UniqueConstraint
@@ -8,6 +9,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import Base
 from .utils import utcnow
+
+if TYPE_CHECKING:
+    from .meal_issue import MealIssue
+    from .menu_item import MenuItem
+    from .payment import Payment
+    from .review import Review
 
 
 class Menu(Base):

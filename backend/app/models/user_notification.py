@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import Base
 from .utils import utcnow
+
+if TYPE_CHECKING:
+    from .notification import Notification
+    from .user import User
 
 
 class UserNotification(Base):

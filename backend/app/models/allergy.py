@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import Base
 from .associations import dish_allergies, user_allergies
+
+if TYPE_CHECKING:
+    from .dish import Dish
+    from .user import User
 
 
 class Allergy(Base):

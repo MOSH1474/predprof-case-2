@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import Base
 from .utils import utcnow
+
+if TYPE_CHECKING:
+    from .dish import Dish
+    from .menu import Menu
+    from .user import User
 
 
 class Review(Base):

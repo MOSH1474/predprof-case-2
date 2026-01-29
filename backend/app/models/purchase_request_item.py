@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, Integer, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import Base
+
+if TYPE_CHECKING:
+    from .product import Product
+    from .purchase_request import PurchaseRequest
 
 
 class PurchaseRequestItem(Base):
