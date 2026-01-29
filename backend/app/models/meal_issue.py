@@ -1,0 +1,36 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from ..db import Base
+from .utils import utcnow
+
+if TYPE_CHECKING:
+    from .menu import Menu
+    from .user import User
+
+
+class MealIssue(Base):
+    __tablename__ = "meal_issues"
+    __table_args__ = (UniqueConstraint("user_id", "menu_id", name="uq_meal_issue_user_menu"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    menu_id: Mapped[int] = mapped_column(ForeignKey("menus.id"), nullable=False, index=True)
+    served_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="issued")
+    served_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    user: Mapped["User"] = relationship(
+        back_populates="meal_issues", foreign_keys=[user_id]
+    )
+    served_by: Mapped["User | None"] = relationship(
+        back_populates="served_meal_issues", foreign_keys=[served_by_id]
+    )
+    menu: Mapped["Menu"] = relationship(back_populates="meal_issues")
