@@ -1,8 +1,10 @@
+import { AuthProvider } from "./contexts/AuthContext.jsx";
+import AppRoutes from "./routes/AppRoutes.jsx";
+
 export default function App() {
   return (
-    <main style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
-      <h1>Frontend</h1>
-      <p>Vite + React is ready.</p>
-    </main>
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
