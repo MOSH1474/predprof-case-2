@@ -8,3 +8,10 @@ user_allergies = Table(
     Column("user_id", ForeignKey("users.id"), primary_key=True),
     Column("allergy_id", ForeignKey("allergies.id"), primary_key=True),
 )
+
+dish_allergies = Table(
+    "dish_allergies",
+    Base.metadata,
+    Column("dish_id", ForeignKey("dishes.id"), primary_key=True),
+    Column("allergy_id", ForeignKey("allergies.id"), primary_key=True),
+)

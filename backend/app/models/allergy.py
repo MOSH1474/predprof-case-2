@@ -4,7 +4,7 @@ from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import Base
-from .associations import user_allergies
+from .associations import dish_allergies, user_allergies
 
 
 class Allergy(Base):
@@ -16,4 +16,7 @@ class Allergy(Base):
 
     users: Mapped[list["User"]] = relationship(
         secondary=user_allergies, back_populates="allergies"
+    )
+    dishes: Mapped[list["Dish"]] = relationship(
+        secondary=dish_allergies, back_populates="allergies"
     )
