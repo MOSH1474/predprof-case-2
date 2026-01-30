@@ -1,5 +1,6 @@
 import importlib
 import os
+import sys
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -13,13 +14,22 @@ def anyio_backend():
 
 @pytest.fixture(scope="session")
 async def test_app():
+    import app.db as db_module
+    import app.db.deps as deps_module
     import app.db.session as session_module
     import app.db.base as base_module
-    import app.models  # noqa: F401
     import app.main as main_module
 
     importlib.reload(session_module)
     importlib.reload(base_module)
+    importlib.reload(deps_module)
+    importlib.reload(db_module)
+
+    for name in list(sys.modules):
+        if name.startswith("app.models."):
+            del sys.modules[name]
+    import app.models as models_module
+    importlib.reload(models_module)
     importlib.reload(main_module)
 
     test_db_path = "./test.db"
@@ -35,6 +45,9 @@ async def test_app():
 
     session_module.engine = engine
     session_module.SessionLocal = SessionLocal
+    deps_module.SessionLocal = SessionLocal
+    db_module.engine = engine
+    db_module.SessionLocal = SessionLocal
 
     from app.db import Base
 
