@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
 export default function Register() {
@@ -13,6 +13,7 @@ export default function Register() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const { registerStudent } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -32,7 +33,8 @@ export default function Register() {
       setError(result.message);
       return;
     }
-    setSuccess("Регистрация успешна. Теперь можно войти с вашим логином.");
+    setSuccess("Регистрация успешна.");
+    navigate("/student/allergies", { replace: true });
   };
 
   return (

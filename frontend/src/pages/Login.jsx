@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
 export default function Login() {
@@ -7,6 +7,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const { loginWithCredentials } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -27,6 +28,7 @@ export default function Login() {
       return;
     }
     setSuccess("Вход выполнен успешно.");
+    navigate("/student/allergies", { replace: true });
   };
 
   return (
