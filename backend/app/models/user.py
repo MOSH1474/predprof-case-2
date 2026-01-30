@@ -58,10 +58,13 @@ class User(Base):
         foreign_keys="MealIssue.served_by_id"
     )
     purchase_requests: Mapped[list["PurchaseRequest"]] = relationship(
-        back_populates="requested_by", cascade="all, delete-orphan"
+        back_populates="requested_by",
+        cascade="all, delete-orphan",
+        foreign_keys="PurchaseRequest.requested_by_id",
     )
     approved_purchase_requests: Mapped[list["PurchaseRequest"]] = relationship(
-        back_populates="approved_by", foreign_keys="PurchaseRequest.approved_by_id"
+        back_populates="approved_by",
+        foreign_keys="PurchaseRequest.approved_by_id",
     )
     inventory_transactions: Mapped[list["InventoryTransaction"]] = relationship(
         back_populates="created_by"
