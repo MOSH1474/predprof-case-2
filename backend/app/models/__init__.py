@@ -12,7 +12,7 @@ from .purchase_request import PurchaseRequest
 from .purchase_request_item import PurchaseRequestItem
 from .review import Review
 from .user_notification import UserNotification
-from .user import User
+from .user import User, UserRole
 
 __all__ = [
     "dish_allergies",
@@ -31,4 +31,5 @@ __all__ = [
     "Review",
     "UserNotification",
     "User",
+    "UserRole",
 ]

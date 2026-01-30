@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     db_password: str = Field(default="app", alias="DB_PASSWORD")
     db_port: int = Field(default=5432, alias="DB_PORT")
     db_name: str = Field(default="app", alias="DB_NAME")
+    jwt_secret: str = Field(default="change-me", alias="JWT_SECRET")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    access_token_exp_minutes: int = Field(default=60, alias="ACCESS_TOKEN_EXP_MINUTES")
 
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
@@ -20,6 +23,14 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def database_url(self) -> str:
+        return (
+            f"postgresql+asyncpg://{self.db_user}:{self.db_password}"
+            f"@{self.db_host}:{self.db_port}/{self.db_name}"
+        )
+
+    @computed_field
+    @property
+    def sync_database_url(self) -> str:
         return (
             f"postgresql+psycopg://{self.db_user}:{self.db_password}"
             f"@{self.db_host}:{self.db_port}/{self.db_name}"
