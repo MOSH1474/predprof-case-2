@@ -13,3 +13,11 @@ def raise_http_401(detail: str) -> None:
         detail=detail,
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+
+def raise_http_404(detail: str) -> None:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+
+
+def raise_http_403(detail: str) -> None:
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
