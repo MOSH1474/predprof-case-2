@@ -1,5 +1,6 @@
 ﻿import { Navigate, Route, Routes } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout.jsx";
+import Cook from "../pages/Cook.jsx";
 import Login from "../pages/Login.jsx";
 import Register from "../pages/Register.jsx";
 import StudentAllergies from "../pages/StudentAllergies.jsx";
@@ -15,6 +16,7 @@ export default function AppRoutes() {
       </Route>
 
       <Route path="/student/allergies" element={<StudentAllergies />} />
+      <Route path="/cook" element={<Cook />} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
