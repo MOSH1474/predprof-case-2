@@ -28,7 +28,7 @@ erDiagram
     string email
     string full_name
     string password_hash
-    enum role (student|cook|admin)
+    string role "student|cook|admin"
     text dietary_preferences
     bool is_active
     datetime created_at
@@ -60,7 +60,7 @@ erDiagram
   MENU {
     int id PK
     date menu_date
-    string meal_type
+    string meal_type "breakfast|lunch"
     string title
     decimal price
     datetime created_at

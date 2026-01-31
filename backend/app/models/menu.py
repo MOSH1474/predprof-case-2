@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from enum import Enum
 from typing import TYPE_CHECKING
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, Integer, Numeric, String, UniqueConstraint
+from sqlalchemy import Date, DateTime, Enum as SAEnum, Integer, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import Base
@@ -17,13 +18,25 @@ if TYPE_CHECKING:
     from .review import Review
 
 
+class MealType(str, Enum):
+    BREAKFAST = "breakfast"
+    LUNCH = "lunch"
+
+
 class Menu(Base):
     __tablename__ = "menus"
     __table_args__ = (UniqueConstraint("menu_date", "meal_type", name="uq_menu_date_type"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     menu_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
-    meal_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    meal_type: Mapped[MealType] = mapped_column(
+        SAEnum(
+            MealType,
+            name="meal_type",
+            values_callable=lambda enum_cls: [item.value for item in enum_cls],
+        ),
+        nullable=False,
+    )
     title: Mapped[str | None] = mapped_column(String(255))
     price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

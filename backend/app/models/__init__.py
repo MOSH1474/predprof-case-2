@@ -3,7 +3,7 @@ from .allergy import Allergy
 from .dish import Dish
 from .inventory_transaction import InventoryTransaction
 from .meal_issue import MealIssue
-from .menu import Menu
+from .menu import MealType, Menu
 from .menu_item import MenuItem
 from .notification import Notification
 from .payment import Payment
@@ -21,6 +21,7 @@ __all__ = [
     "Dish",
     "InventoryTransaction",
     "MealIssue",
+    "MealType",
     "Menu",
     "MenuItem",
     "Notification",
