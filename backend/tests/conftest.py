@@ -54,3 +54,16 @@ async def client(test_engine):
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+async def db_session(test_engine):
+    TestSessionLocal = async_sessionmaker(
+        bind=test_engine,
+        autoflush=False,
+        autocommit=False,
+        expire_on_commit=False,
+        class_=AsyncSession,
+    )
+    async with TestSessionLocal() as session:
+        yield session

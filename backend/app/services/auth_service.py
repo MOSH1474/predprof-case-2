@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import User, UserRole
 from ..schemas.auth import LoginRequest, RegisterRequest
-from .security import decode_access_token, hash_password, verify_password
+from .security import create_access_token, decode_access_token, hash_password, verify_password
 from .errors import raise_http_400, raise_http_401
 
 
@@ -38,6 +38,12 @@ async def authenticate_user(payload: LoginRequest, db: AsyncSession) -> User:
     if not verify_password(payload.password, user.password_hash):
         raise_http_401("Invalid email or password")
     return user
+
+
+async def login_user(payload: LoginRequest, db: AsyncSession) -> tuple[User, str, int]:
+    user = await authenticate_user(payload, db)
+    token, expires_in = create_access_token(subject=str(user.id), role=user.role.value)
+    return user, token, expires_in
 
 
 async def get_current_user(token: str, db: AsyncSession) -> User:

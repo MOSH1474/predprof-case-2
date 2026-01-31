@@ -1,20 +1,20 @@
-from fastapi import Depends, FastAPI
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import FastAPI
 
-from .db import get_db
-from .routers import auth_router
+from .docs import public_docs
+from .routers import allergies_router, auth_router, preferences_router
 
-app = FastAPI(title="Backend API", root_path="/api/v1")
+OPENAPI_TAGS = [
+    {"name": "auth", "description": "Аутентификация и сессии пользователей"},
+    {"name": "allergies", "description": "Аллергии и управление ими"},
+    {"name": "preferences", "description": "Предпочтения и аллергия студентов"},
+]
+
+app = FastAPI(title="Backend API", root_path="/api/v1", openapi_tags=OPENAPI_TAGS)
 app.include_router(auth_router)
+app.include_router(allergies_router)
+app.include_router(preferences_router)
 
 
-@app.get("/health")
+@app.get("/health", **public_docs())
 def health():
-    return {"status": "meow"}
-
-
-@app.get("/db-check")
-async def db_check(db: AsyncSession = Depends(get_db)):
-    await db.execute(text("SELECT 1"))
-    return {"db": "ok"}
+    return {"status": "ok"}
