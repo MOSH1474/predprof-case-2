@@ -112,6 +112,19 @@ a {
   font-size: 1.4rem;
 }
 
+.page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.auth-status {
+  margin-left: auto;
+  text-align: right;
+}
+
 .page-description {
   margin: 0.5rem 0 1.5rem;
   color: #4b5563;
@@ -186,6 +199,24 @@ a {
 
 .option-card .form-field {
   width: 100%;
+}
+
+.stock-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.stock-scroll .option-card {
+  flex: 0 0 280px;
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.stock-card strong {
+  margin-bottom: 0.25rem;
 }
 
 .stock-update {
