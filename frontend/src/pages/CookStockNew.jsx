@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+﻿import { useEffect, useState } from "react";
+import CookNav from "../components/CookNav.jsx";
 import { getCookData, updateCookData } from "../utils/cookStorage.js";
 
 const BALANCE_DEFAULTS = {
@@ -65,14 +65,7 @@ export default function CookStockNew() {
         <p>Создайте новую позицию для учета остатков.</p>
       </header>
 
-      <div className="button-row">
-        <Link to="/cook" className="secondary-button">
-          Назад к разделам
-        </Link>
-        <Link to="/cook/stock" className="secondary-button">
-          Текущие остатки
-        </Link>
-      </div>
+      <CookNav />
 
       <form className="auth-form" onSubmit={handleStockSubmit}>
         <div className="form-group">

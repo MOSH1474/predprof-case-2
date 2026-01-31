@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+﻿import { useEffect, useState } from "react";
+import CookNav from "../components/CookNav.jsx";
 import { getCookData, updateCookData } from "../utils/cookStorage.js";
 
 const LEFTOVER_DEFAULTS = {
@@ -66,11 +66,7 @@ export default function CookLeftovers() {
         <p>Отмечайте остатки блюд после выдачи, чтобы планировать меню.</p>
       </header>
 
-      <div className="button-row">
-        <Link to="/cook" className="secondary-button">
-          Назад к разделам
-        </Link>
-      </div>
+      <CookNav />
 
       <form className="auth-form" onSubmit={handleLeftoverSubmit}>
         <div className="form-group">

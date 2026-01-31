@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+﻿import { useEffect, useMemo, useState } from "react";
+import CookNav from "../components/CookNav.jsx";
 import { getCookData, updateCookData } from "../utils/cookStorage.js";
 
 const MEAL_DEFAULTS = {
@@ -76,14 +76,7 @@ export default function CookMeals() {
         <p>Фиксируйте количество завтраков и обедов.</p>
       </header>
 
-      <div className="button-row">
-        <Link to="/cook" className="secondary-button">
-          Назад к разделам
-        </Link>
-        <Link to="/cook/meals/log" className="secondary-button">
-          Журнал питания
-        </Link>
-      </div>
+      <CookNav />
 
       <form className="auth-form" onSubmit={handleMealSubmit}>
         <div className="form-group">

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+﻿import { useState } from "react";
+import CookNav from "../components/CookNav.jsx";
 import { getCookData } from "../utils/cookStorage.js";
 
 export default function CookMealLog() {
@@ -12,14 +12,7 @@ export default function CookMealLog() {
         <p>История выдачи завтраков и обедов.</p>
       </header>
 
-      <div className="button-row">
-        <Link to="/cook" className="secondary-button">
-          Назад к разделам
-        </Link>
-        <Link to="/cook/meals" className="secondary-button">
-          Учет питания
-        </Link>
-      </div>
+      <CookNav />
 
       <div className="form-group">
         <div className="option-grid">

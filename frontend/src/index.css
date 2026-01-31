@@ -103,7 +103,7 @@ a {
 .page {
   background: #ffffff;
   border-radius: 0.75rem;
-  padding: 2rem;
+  padding: 2rem 2rem 1.5rem;
   border: 1px solid #e1e4ea;
 }
 
@@ -123,6 +123,35 @@ a {
 .auth-status {
   margin-left: auto;
   text-align: right;
+}
+
+.cook-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0 1.25rem;
+  padding: 0.5rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e1e4ea;
+  position: sticky;
+  top: 1rem;
+  z-index: 5;
+}
+
+.cook-nav a {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  font-weight: 600;
+  color: #1f2937;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.cook-nav a:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
 }
 
 .page-description {

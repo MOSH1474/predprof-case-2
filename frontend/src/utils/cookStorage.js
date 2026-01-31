@@ -1,4 +1,4 @@
-const STORAGE_KEY = "canteen_cook_data";
+﻿const STORAGE_KEY = "canteen_cook_data";
 
 const INITIAL_STOCK = [
   { id: 1, name: "Крупы", unit: "кг", balance: 24, prepared: 6 },

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+﻿import { useEffect, useState } from "react";
+import CookNav from "../components/CookNav.jsx";
 import { getCookData, updateCookData } from "../utils/cookStorage.js";
 
 export default function CookStock() {
@@ -29,14 +29,7 @@ export default function CookStock() {
         <p>Контроль остатков и приготовленных блюд.</p>
       </header>
 
-      <div className="button-row">
-        <Link to="/cook" className="secondary-button">
-          Назад к разделам
-        </Link>
-        <Link to="/cook/stock/new" className="secondary-button">
-          Добавить продукт
-        </Link>
-      </div>
+      <CookNav />
 
       <div className="form-group">
         <div className="option-grid stock-scroll">
