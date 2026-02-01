@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 export default function Login() {
   const [form, setForm] = useState({ login: "", password: "" });
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { loginWithCredentials } = useAuth();
   const navigate = useNavigate();
 
@@ -15,19 +15,17 @@ export default function Login() {
     if (error) {
       setError("");
     }
-    if (success) {
-      setSuccess("");
-    }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const result = loginWithCredentials(form);
+    setIsSubmitting(true);
+    const result = await loginWithCredentials(form);
     if (!result.ok) {
       setError(result.message);
+      setIsSubmitting(false);
       return;
     }
-    setSuccess("Вход выполнен успешно.");
     navigate("/student/allergies", { replace: true });
   };
 
@@ -42,13 +40,13 @@ export default function Login() {
       </header>
       <form className="auth-form" onSubmit={handleSubmit}>
         <label className="form-field">
-          Логин
+          Логин (email)
           <input
             type="text"
             name="login"
             value={form.login}
             onChange={handleChange}
-            placeholder="Введите логин"
+            placeholder="student@example.com"
             autoComplete="username"
             required
           />
@@ -62,6 +60,7 @@ export default function Login() {
             onChange={handleChange}
             placeholder="Введите пароль"
             autoComplete="current-password"
+            minLength={8}
             required
           />
         </label>
@@ -70,9 +69,8 @@ export default function Login() {
             {error}
           </div>
         )}
-        {success && <div className="form-success">{success}</div>}
-        <button type="submit" className="primary-button">
-          Войти
+        <button type="submit" className="primary-button" disabled={isSubmitting}>
+          {isSubmitting ? "Входим..." : "Войти"}
         </button>
         <div className="auth-footer">
           <span>Нет аккаунта ученика?</span>
