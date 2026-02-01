@@ -1,5 +1,12 @@
 ﻿import { Navigate, Route, Routes } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout.jsx";
+import Cook from "../pages/Cook.jsx";
+import CookLeftovers from "../pages/CookLeftovers.jsx";
+import CookMealLog from "../pages/CookMealLog.jsx";
+import CookMeals from "../pages/CookMeals.jsx";
+import CookPurchases from "../pages/CookPurchases.jsx";
+import CookStock from "../pages/CookStock.jsx";
+import CookStockNew from "../pages/CookStockNew.jsx";
 import Login from "../pages/Login.jsx";
 import Register from "../pages/Register.jsx";
 import StudentAllergies from "../pages/StudentAllergies.jsx";
@@ -15,6 +22,13 @@ export default function AppRoutes() {
       </Route>
 
       <Route path="/student/allergies" element={<StudentAllergies />} />
+      <Route path="/cook" element={<Cook />} />
+      <Route path="/cook/meals" element={<CookMeals />} />
+      <Route path="/cook/meals/log" element={<CookMealLog />} />
+      <Route path="/cook/stock" element={<CookStock />} />
+      <Route path="/cook/stock/new" element={<CookStockNew />} />
+      <Route path="/cook/leftovers" element={<CookLeftovers />} />
+      <Route path="/cook/purchases" element={<CookPurchases />} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
