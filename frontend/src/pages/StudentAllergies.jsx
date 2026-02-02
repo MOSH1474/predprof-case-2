@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { apiRequest } from "../api/client.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
@@ -185,11 +185,18 @@ export default function StudentAllergies() {
 
   return (
     <section className="page">
-      <header className="auth-header">
-        <h2>Аллергии и предпочтения</h2>
-        <p>
-          Укажите аллергены и особенности питания — мы учтем их при подборе блюд.
-        </p>
+      <header className="auth-header page-header-row">
+        <div>
+          <h2>Аллергии и предпочтения</h2>
+          <p>
+            Укажите аллергены и особенности питания — мы учтем их при подборе блюд.
+          </p>
+        </div>
+        <div className="button-row">
+          <Link className="secondary-button" to="/student/menu">
+            К меню
+          </Link>
+        </div>
       </header>
 
       {loading ? (
