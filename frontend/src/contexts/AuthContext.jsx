@@ -1,106 +1,118 @@
 ﻿import React, { createContext, useContext, useMemo, useState } from "react";
+import { apiRequest } from "../api/client.js";
 
 const AuthContext = createContext(null);
 
-const STUDENT_STORAGE_KEY = "canteen_students";
+const TOKEN_KEY = "canteen_token";
+const USER_KEY = "canteen_user";
 
-const normalize = (value) => value.trim().toLowerCase();
-
-const getStudents = () => {
+const loadStoredUser = () => {
   if (typeof window === "undefined") {
-    return [];
+    return null;
   }
   try {
-    const raw = window.localStorage.getItem(STUDENT_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const raw = window.localStorage.getItem(USER_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
-    return [];
+    return null;
   }
 };
 
-const saveStudents = (students) => {
+const loadStoredToken = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return window.localStorage.getItem(TOKEN_KEY);
+};
+
+const persistSession = (user, token) => {
   if (typeof window === "undefined") {
     return;
   }
-  window.localStorage.setItem(STUDENT_STORAGE_KEY, JSON.stringify(students));
+  if (user) {
+    window.localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
+  if (token) {
+    window.localStorage.setItem(TOKEN_KEY, token);
+  }
+};
+
+const clearSession = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.removeItem(USER_KEY);
+  window.localStorage.removeItem(TOKEN_KEY);
 };
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(loadStoredUser);
+  const [token, setToken] = useState(loadStoredToken);
 
-  const loginWithCredentials = ({ login, password }) => {
-    const normalizedLogin = normalize(login || "");
+  const loginWithCredentials = async ({ login, password }) => {
+    const normalizedLogin = (login || "").trim().toLowerCase();
 
     if (!normalizedLogin || !password) {
       return { ok: false, message: "Заполните логин и пароль." };
     }
 
-    const students = getStudents();
-    const student = students.find((entry) => entry.email === normalizedLogin);
+    try {
+      const data = await apiRequest("/auth/login", {
+        method: "POST",
+        isForm: true,
+        body: { username: normalizedLogin, password },
+      });
 
-    if (!student) {
-      return {
-        ok: false,
-        message: "Ученик не найден. Зарегистрируйтесь, если это ваш первый вход.",
-      };
+      setUser(data.user);
+      setToken(data.access_token);
+      persistSession(data.user, data.access_token);
+      return { ok: true, user: data.user };
+    } catch (error) {
+      return { ok: false, message: error.message };
     }
-
-    if (student.password !== password) {
-      return { ok: false, message: "Неверный пароль." };
-    }
-
-    const nextUser = {
-      role: "student",
-      email: student.email,
-      name: `${student.firstName} ${student.lastName}`.trim(),
-    };
-    setUser(nextUser);
-    return { ok: true, user: nextUser };
   };
 
-  const registerStudent = (payload) => {
-    const email = normalize(payload.email || "");
+  const registerStudent = async (payload) => {
+    const email = (payload.email || "").trim().toLowerCase();
+    const fullName = (payload.fullName || "").trim();
+    const password = payload.password || "";
 
-    if (!payload.lastName || !payload.firstName || !email || !payload.password) {
+    if (!email || !fullName || !password) {
       return { ok: false, message: "Заполните обязательные поля." };
     }
 
-    const students = getStudents();
-    if (students.some((entry) => entry.email === email)) {
-      return { ok: false, message: "Ученик с таким email уже зарегистрирован." };
+    try {
+      await apiRequest("/auth/register", {
+        method: "POST",
+        body: {
+          email,
+          password,
+          full_name: fullName,
+        },
+      });
+    } catch (error) {
+      return { ok: false, message: error.message };
     }
 
-    const newStudent = {
-      lastName: payload.lastName.trim(),
-      firstName: payload.firstName.trim(),
-      middleName: payload.middleName?.trim() || "",
-      email,
-      password: payload.password,
-    };
-
-    students.push(newStudent);
-    saveStudents(students);
-
-    const nextUser = {
-      role: "student",
-      email,
-      name: `${newStudent.firstName} ${newStudent.lastName}`.trim(),
-    };
-    setUser(nextUser);
-    return { ok: true, user: nextUser };
+    return loginWithCredentials({ login: email, password });
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    clearSession();
+  };
 
   const value = useMemo(
     () => ({
       user,
-      isAuthenticated: Boolean(user),
+      token,
+      isAuthenticated: Boolean(user && token),
       loginWithCredentials,
       registerStudent,
       logout,
     }),
-    [user]
+    [user, token]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

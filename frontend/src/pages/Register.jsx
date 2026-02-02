@@ -11,7 +11,7 @@ export default function Register() {
     password: "",
   });
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { registerStudent } = useAuth();
   const navigate = useNavigate();
 
@@ -21,19 +21,27 @@ export default function Register() {
     if (error) {
       setError("");
     }
-    if (success) {
-      setSuccess("");
-    }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const result = registerStudent(form);
+    setIsSubmitting(true);
+    const fullName = [form.lastName, form.firstName, form.middleName]
+      .filter(Boolean)
+      .join(" ");
+
+    const result = await registerStudent({
+      email: form.email,
+      password: form.password,
+      fullName,
+    });
+
     if (!result.ok) {
       setError(result.message);
+      setIsSubmitting(false);
       return;
     }
-    setSuccess("Регистрация успешна.");
+
     navigate("/student/allergies", { replace: true });
   };
 
@@ -98,8 +106,9 @@ export default function Register() {
             name="password"
             value={form.password}
             onChange={handleChange}
-            placeholder="Введите пароль"
+            placeholder="Минимум 8 символов"
             autoComplete="new-password"
+            minLength={8}
             required
           />
         </label>
@@ -108,9 +117,8 @@ export default function Register() {
             {error}
           </div>
         )}
-        {success && <div className="form-success">{success}</div>}
-        <button type="submit" className="primary-button">
-          Зарегистрироваться
+        <button type="submit" className="primary-button" disabled={isSubmitting}>
+          {isSubmitting ? "Создаем..." : "Зарегистрироваться"}
         </button>
         <div className="auth-footer">
           <span>Уже есть аккаунт?</span>
