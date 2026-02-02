@@ -45,7 +45,7 @@ const serializeDietaryPreferences = (preferences, notes) => {
 };
 
 export default function StudentAllergies() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [allergies, setAllergies] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
@@ -96,6 +96,9 @@ export default function StudentAllergies() {
 
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+  if (user?.role === "cook") {
+    return <Navigate to="/cook" replace />;
   }
 
   const toggleAllergy = (id) => {

@@ -26,6 +26,11 @@ export default function Login() {
       setIsSubmitting(false);
       return;
     }
+    const role = result.user?.role;
+    if (role === "cook") {
+      navigate("/cook", { replace: true });
+      return;
+    }
     navigate("/student/allergies", { replace: true });
   };
 
