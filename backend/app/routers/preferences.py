@@ -20,7 +20,12 @@ router = APIRouter(
 )
 
 
-@router.get("/me", response_model=PreferencesResponse, **roles_docs("student", "admin"))
+@router.get(
+    "/me",
+    response_model=PreferencesResponse,
+    **roles_docs("student", "admin", notes="Профиль предпочтений и аллергенов ученика."),
+    summary="Мои предпочтения",
+)
 async def get_preferences(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_user),
@@ -34,10 +39,12 @@ async def get_preferences(
     **roles_docs(
         "student",
         "admin",
+        notes="Обновляет предпочтения питания и список аллергенов.",
         extra_responses={
             400: error_response("Allergies not found: [1]", "Bad request"),
         },
     ),
+    summary="Обновить предпочтения",
 )
 async def update_preferences(
     payload: PreferencesUpdateRequest,

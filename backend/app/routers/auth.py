@@ -20,10 +20,12 @@ bearer_scheme = HTTPBearer(auto_error=True)
     response_model=UserPublic,
     status_code=status.HTTP_201_CREATED,
     **public_docs(
+        notes="Создает пользователя с ролью `student`.",
         extra_responses={
             400: error_response("Email already registered", "Bad request"),
         }
     ),
+    summary="Регистрация ученика",
 )
 async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db)) -> UserPublic:
     user = await register_student(payload, db)
@@ -34,10 +36,12 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
     "/login",
     response_model=TokenResponse,
     **public_docs(
+        notes="Возвращает токен доступа и профиль пользователя.",
         extra_responses={
             401: error_response("Invalid email or password", "Unauthorized"),
         }
     ),
+    summary="Вход в систему",
 )
 async def login(
     username: EmailStr = Form(...),
@@ -57,7 +61,12 @@ async def login(
     )
 
 
-@router.get("/me", response_model=UserPublic, **roles_docs())
+@router.get(
+    "/me",
+    response_model=UserPublic,
+    **roles_docs(notes="Данные текущего пользователя по токену."),
+    summary="Текущий пользователь",
+)
 async def me(
     db: AsyncSession = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),

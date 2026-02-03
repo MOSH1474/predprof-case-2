@@ -23,7 +23,12 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=AllergyListResponse, **roles_docs("student", "admin"))
+@router.get(
+    "/",
+    response_model=AllergyListResponse,
+    **roles_docs("student", "admin", notes="Справочник аллергенов."),
+    summary="Список аллергенов",
+)
 async def list_allergies_endpoint(db: AsyncSession = Depends(get_db)) -> AllergyListResponse:
     allergies = await list_allergies(db)
     return AllergyListResponse(
@@ -37,10 +42,12 @@ async def list_allergies_endpoint(db: AsyncSession = Depends(get_db)) -> Allergy
     **roles_docs(
         "student",
         "admin",
+        notes="Возвращает аллерген по идентификатору.",
         extra_responses={
             404: error_response("Allergy not found", "Not found"),
         },
     ),
+    summary="Аллерген по id",
 )
 async def get_allergy_endpoint(
     allergy_id: int, db: AsyncSession = Depends(get_db)
@@ -55,10 +62,12 @@ async def get_allergy_endpoint(
     status_code=status.HTTP_201_CREATED,
     **roles_docs(
         "admin",
+        notes="Создает новый аллерген в справочнике.",
         extra_responses={
             400: error_response("Allergy already exists", "Bad request"),
         },
     ),
+    summary="Создать аллерген",
 )
 async def create_allergy_endpoint(
     payload: AllergyCreate,
@@ -74,11 +83,13 @@ async def create_allergy_endpoint(
     response_model=AllergyPublic,
     **roles_docs(
         "admin",
+        notes="Обновляет аллерген по идентификатору.",
         extra_responses={
             400: error_response("Allergy already exists", "Bad request"),
             404: error_response("Allergy not found", "Not found"),
         },
     ),
+    summary="Обновить аллерген",
 )
 async def update_allergy_endpoint(
     allergy_id: int,
@@ -96,10 +107,12 @@ async def update_allergy_endpoint(
     status_code=status.HTTP_204_NO_CONTENT,
     **roles_docs(
         "admin",
+        notes="Удаляет аллерген по идентификатору.",
         extra_responses={
             404: error_response("Allergy not found", "Not found"),
         },
     ),
+    summary="Удалить аллерген",
 )
 async def delete_allergy_endpoint(
     allergy_id: int,

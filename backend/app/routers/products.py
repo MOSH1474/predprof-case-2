@@ -31,7 +31,12 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=ProductListResponse, **roles_docs("cook", "admin"))
+@router.get(
+    "/",
+    response_model=ProductListResponse,
+    **roles_docs("cook", "admin", notes="Справочник продуктов склада."),
+    summary="Список продуктов",
+)
 async def list_products_endpoint(
     is_active: bool | None = Query(default=None),
     category: str | None = Query(default=None),
@@ -41,7 +46,12 @@ async def list_products_endpoint(
     return ProductListResponse(items=[ProductPublic.model_validate(item) for item in products])
 
 
-@router.get("/stock", response_model=ProductStockListResponse, **roles_docs("cook", "admin"))
+@router.get(
+    "/stock",
+    response_model=ProductStockListResponse,
+    **roles_docs("cook", "admin", notes="Возвращает остатки по каждому продукту."),
+    summary="Остатки по складу",
+)
 async def list_products_stock_endpoint(
     is_active: bool | None = Query(default=None),
     category: str | None = Query(default=None),
@@ -70,8 +80,10 @@ async def list_products_stock_endpoint(
     **roles_docs(
         "cook",
         "admin",
+        notes="Возвращает продукт по идентификатору.",
         extra_responses={404: error_response("Product not found", "Not found")},
     ),
+    summary="Продукт по id",
 )
 async def get_product_endpoint(
     product_id: int, db: AsyncSession = Depends(get_db)
@@ -87,8 +99,10 @@ async def get_product_endpoint(
     **roles_docs(
         "cook",
         "admin",
+        notes="Создает продукт в каталоге.",
         extra_responses={400: error_response("Product already exists", "Bad request")},
     ),
+    summary="Создать продукт",
 )
 async def create_product_endpoint(
     payload: ProductCreate,
@@ -105,11 +119,13 @@ async def create_product_endpoint(
     **roles_docs(
         "cook",
         "admin",
+        notes="Обновляет продукт и его свойства.",
         extra_responses={
             400: error_response("Product already exists", "Bad request"),
             404: error_response("Product not found", "Not found"),
         },
     ),
+    summary="Обновить продукт",
 )
 async def update_product_endpoint(
     product_id: int,
@@ -128,8 +144,10 @@ async def update_product_endpoint(
     **roles_docs(
         "cook",
         "admin",
+        notes="Удаляет продукт по идентификатору.",
         extra_responses={404: error_response("Product not found", "Not found")},
     ),
+    summary="Удалить продукт",
 )
 async def delete_product_endpoint(
     product_id: int,

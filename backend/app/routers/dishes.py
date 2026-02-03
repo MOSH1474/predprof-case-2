@@ -23,7 +23,12 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=DishListResponse, **roles_docs("student", "cook", "admin"))
+@router.get(
+    "/",
+    response_model=DishListResponse,
+    **roles_docs("student", "cook", "admin", notes="Список блюд, можно фильтровать по активности."),
+    summary="Список блюд",
+)
 async def list_dishes_endpoint(
     is_active: bool | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
@@ -39,8 +44,10 @@ async def list_dishes_endpoint(
         "student",
         "cook",
         "admin",
+        notes="Возвращает блюдо по идентификатору.",
         extra_responses={404: error_response("Dish not found", "Not found")},
     ),
+    summary="Блюдо по id",
 )
 async def get_dish_endpoint(dish_id: int, db: AsyncSession = Depends(get_db)) -> DishPublic:
     dish = await get_dish(dish_id, db)
@@ -54,8 +61,10 @@ async def get_dish_endpoint(dish_id: int, db: AsyncSession = Depends(get_db)) ->
     **roles_docs(
         "cook",
         "admin",
+        notes="Создает блюдо и связывает с аллергенами при необходимости.",
         extra_responses={400: error_response("Dish already exists", "Bad request")},
     ),
+    summary="Создать блюдо",
 )
 async def create_dish_endpoint(
     payload: DishCreate,
@@ -72,11 +81,13 @@ async def create_dish_endpoint(
     **roles_docs(
         "cook",
         "admin",
+        notes="Обновляет данные блюда и список аллергенов.",
         extra_responses={
             400: error_response("Dish already exists", "Bad request"),
             404: error_response("Dish not found", "Not found"),
         },
     ),
+    summary="Обновить блюдо",
 )
 async def update_dish_endpoint(
     dish_id: int,
@@ -95,8 +106,10 @@ async def update_dish_endpoint(
     **roles_docs(
         "cook",
         "admin",
+        notes="Удаляет блюдо по идентификатору.",
         extra_responses={404: error_response("Dish not found", "Not found")},
     ),
+    summary="Удалить блюдо",
 )
 async def delete_dish_endpoint(
     dish_id: int,

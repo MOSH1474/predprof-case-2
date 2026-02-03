@@ -25,7 +25,17 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=MenuListResponse, **roles_docs("student", "cook", "admin"))
+@router.get(
+    "/",
+    response_model=MenuListResponse,
+    **roles_docs(
+        "student",
+        "cook",
+        "admin",
+        notes="Список меню с фильтрами по датам и типу приема пищи.",
+    ),
+    summary="Список меню",
+)
 async def list_menus_endpoint(
     date_from: date | None = Query(default=None),
     date_to: date | None = Query(default=None),
@@ -43,8 +53,10 @@ async def list_menus_endpoint(
         "student",
         "cook",
         "admin",
+        notes="Возвращает меню по идентификатору.",
         extra_responses={404: error_response("Menu not found", "Not found")},
     ),
+    summary="Меню по id",
 )
 async def get_menu_endpoint(menu_id: int, db: AsyncSession = Depends(get_db)) -> MenuPublic:
     menu = await get_menu(menu_id, db)
@@ -58,12 +70,14 @@ async def get_menu_endpoint(menu_id: int, db: AsyncSession = Depends(get_db)) ->
     **roles_docs(
         "cook",
         "admin",
+        notes="Меню уникально по комбинации `menu_date + meal_type`.",
         extra_responses={
             400: error_response(
                 "Menu for this date and meal type already exists", "Bad request"
             ),
         },
     ),
+    summary="Создать меню",
 )
 async def create_menu_endpoint(
     payload: MenuCreate,
@@ -80,6 +94,7 @@ async def create_menu_endpoint(
     **roles_docs(
         "cook",
         "admin",
+        notes="Обновляет основную информацию и позиции меню.",
         extra_responses={
             400: error_response(
                 "Menu for this date and meal type already exists", "Bad request"
@@ -87,6 +102,7 @@ async def create_menu_endpoint(
             404: error_response("Menu not found", "Not found"),
         },
     ),
+    summary="Обновить меню",
 )
 async def update_menu_endpoint(
     menu_id: int,
@@ -105,8 +121,10 @@ async def update_menu_endpoint(
     **roles_docs(
         "cook",
         "admin",
+        notes="Удаляет меню по идентификатору.",
         extra_responses={404: error_response("Menu not found", "Not found")},
     ),
+    summary="Удалить меню",
 )
 async def delete_menu_endpoint(
     menu_id: int,

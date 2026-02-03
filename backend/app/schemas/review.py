@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ReviewCreate(BaseModel):
@@ -10,6 +10,14 @@ class ReviewCreate(BaseModel):
     menu_id: int | None = Field(default=None, gt=0)
     rating: int = Field(ge=1, le=5)
     comment: str | None = Field(default=None, max_length=1000)
+
+    @field_validator("comment")
+    @classmethod
+    def _normalize_comment(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
 
 
 class ReviewPublic(BaseModel):

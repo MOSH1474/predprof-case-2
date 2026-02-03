@@ -33,6 +33,14 @@ class MenuCreate(BaseModel):
     price: Decimal | None = Field(default=None, ge=0)
     items: list[MenuItemCreate] = Field(min_length=1)
 
+    @field_validator("title")
+    @classmethod
+    def _normalize_title(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
+
     @field_validator("items")
     @classmethod
     def _unique_items(cls, value: list[MenuItemCreate]) -> list[MenuItemCreate]:
@@ -48,6 +56,14 @@ class MenuUpdate(BaseModel):
     title: str | None = Field(default=None, max_length=255)
     price: Decimal | None = Field(default=None, ge=0)
     items: list[MenuItemCreate] | None = None
+
+    @field_validator("title")
+    @classmethod
+    def _normalize_title(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
 
     @field_validator("items")
     @classmethod

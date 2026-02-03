@@ -28,7 +28,14 @@ router = APIRouter(
 @router.get(
     "/payments",
     response_model=PaymentStatsResponse,
-    **roles_docs("admin"),
+    **roles_docs(
+        "admin",
+        notes=(
+            "Агрегация оплат по статусу и типу за период. "
+            "Фильтрация идет по `Payment.created_at`."
+        ),
+    ),
+    summary="Статистика оплат",
 )
 async def get_payment_stats_endpoint(
     date_from: datetime | None = Query(default=None),
@@ -55,7 +62,14 @@ async def get_payment_stats_endpoint(
 @router.get(
     "/attendance",
     response_model=AttendanceStatsResponse,
-    **roles_docs("admin"),
+    **roles_docs(
+        "admin",
+        notes=(
+            "Посещаемость по статусам выдачи питания. "
+            "Фильтрация идет по `Menu.menu_date`."
+        ),
+    ),
+    summary="Статистика посещаемости",
 )
 async def get_attendance_stats_endpoint(
     date_from: date | None = Query(default=None),

@@ -27,7 +27,14 @@ router = APIRouter(
 @router.get(
     "/nutrition",
     response_model=NutritionReportResponse,
-    **roles_docs("admin"),
+    **roles_docs(
+        "admin",
+        notes=(
+            "Отчет по выданному питанию с группировкой по дате и типу приема пищи. "
+            "Считает `issued/served/confirmed` на основе выдач."
+        ),
+    ),
+    summary="Отчет по питанию",
 )
 async def get_nutrition_report_endpoint(
     date_from: date | None = Query(default=None),
@@ -68,7 +75,14 @@ async def get_nutrition_report_endpoint(
 @router.get(
     "/expenses",
     response_model=ExpenseReportResponse,
-    **roles_docs("admin"),
+    **roles_docs(
+        "admin",
+        notes=(
+            "Отчет по затратам на закупку. "
+            "Учитываются только одобренные заявки, сумма считается как `quantity * unit_price`."
+        ),
+    ),
+    summary="Отчет по затратам",
 )
 async def get_expense_report_endpoint(
     date_from: date | None = Query(default=None),

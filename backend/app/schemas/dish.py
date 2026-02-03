@@ -10,6 +10,22 @@ class DishBase(BaseModel):
     description: str | None = Field(default=None, max_length=1000)
     is_active: bool = True
 
+    @field_validator("name")
+    @classmethod
+    def _normalize_name(cls, value: str) -> str:
+        trimmed = value.strip()
+        if not trimmed:
+            raise ValueError("name cannot be empty")
+        return trimmed
+
+    @field_validator("description")
+    @classmethod
+    def _normalize_description(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
+
 
 class DishCreate(DishBase):
     allergy_ids: list[int] | None = None
@@ -31,6 +47,24 @@ class DishUpdate(BaseModel):
     description: str | None = Field(default=None, max_length=1000)
     is_active: bool | None = None
     allergy_ids: list[int] | None = None
+
+    @field_validator("name")
+    @classmethod
+    def _normalize_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        if not trimmed:
+            raise ValueError("name cannot be empty")
+        return trimmed
+
+    @field_validator("description")
+    @classmethod
+    def _normalize_description(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
 
     @field_validator("allergy_ids")
     @classmethod

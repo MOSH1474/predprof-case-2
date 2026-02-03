@@ -19,7 +19,12 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=ReviewListResponse, **roles_docs("student", "cook", "admin"))
+@router.get(
+    "/",
+    response_model=ReviewListResponse,
+    **roles_docs("student", "cook", "admin", notes="Отзывы можно фильтровать по блюду, меню и пользователю."),
+    summary="Список отзывов",
+)
 async def list_reviews_endpoint(
     dish_id: int | None = Query(default=None, gt=0),
     menu_id: int | None = Query(default=None, gt=0),
@@ -41,11 +46,16 @@ async def list_reviews_endpoint(
     **roles_docs(
         "student",
         "admin",
+        notes=(
+            "Создает отзыв на блюдо. "
+            "Если указан `menu_id`, блюдо должно входить в это меню."
+        ),
         extra_responses={
             400: error_response("Dish not found in menu", "Bad request"),
             404: error_response("Dish not found", "Not found"),
         },
     ),
+    summary="Создать отзыв",
 )
 async def create_review_endpoint(
     payload: ReviewCreate,

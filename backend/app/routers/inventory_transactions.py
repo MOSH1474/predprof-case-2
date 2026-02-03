@@ -30,6 +30,7 @@ router = APIRouter(
     "/",
     response_model=InventoryTransactionListResponse,
     **roles_docs("cook", "admin"),
+    summary="История движений склада",
 )
 async def list_inventory_transactions_endpoint(
     product_id: int | None = Query(default=None, gt=0),
@@ -53,11 +54,16 @@ async def list_inventory_transactions_endpoint(
     **roles_docs(
         "cook",
         "admin",
+        notes=(
+            "Фиксирует движение склада: `in` — приход, `out` — расход. "
+            "При расходе проверяется наличие остатка."
+        ),
         extra_responses={
             400: error_response("Not enough stock", "Bad request"),
             404: error_response("Product not found", "Not found"),
         },
     ),
+    summary="Создать движение склада",
 )
 async def create_inventory_transaction_endpoint(
     payload: InventoryTransactionCreate,

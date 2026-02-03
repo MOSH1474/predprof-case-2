@@ -34,6 +34,7 @@ router = APIRouter(
     "/",
     response_model=PurchaseRequestListResponse,
     **roles_docs("cook", "admin"),
+    summary="Список заявок на закупку",
 )
 async def list_purchase_requests_endpoint(
     status: PurchaseRequestStatus | None = Query(default=None),
@@ -63,8 +64,10 @@ async def list_purchase_requests_endpoint(
     **roles_docs(
         "cook",
         "admin",
+        notes="Детали заявки на закупку.",
         extra_responses={404: error_response("Purchase request not found", "Not found")},
     ),
+    summary="Заявка по id",
 )
 async def get_purchase_request_endpoint(
     request_id: int,
@@ -84,10 +87,15 @@ async def get_purchase_request_endpoint(
     **roles_docs(
         "cook",
         "admin",
+        notes=(
+            "Создает заявку на закупку продуктов. "
+            "Продукты должны быть активными."
+        ),
         extra_responses={
             400: error_response("Products not found: [1]", "Bad request"),
         },
     ),
+    summary="Создать заявку на закупку",
 )
 async def create_purchase_request_endpoint(
     payload: PurchaseRequestCreate,
@@ -103,11 +111,16 @@ async def create_purchase_request_endpoint(
     response_model=PurchaseRequestPublic,
     **roles_docs(
         "admin",
+        notes=(
+            "Согласовать или отклонить заявку. "
+            "Повторное решение для уже обработанной заявки запрещено."
+        ),
         extra_responses={
             400: error_response("Purchase request already decided", "Bad request"),
             404: error_response("Purchase request not found", "Not found"),
         },
     ),
+    summary="Решение по заявке",
 )
 async def decide_purchase_request_endpoint(
     request_id: int,

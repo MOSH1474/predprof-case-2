@@ -19,6 +19,14 @@ class PurchaseRequestCreate(BaseModel):
     note: str | None = Field(default=None, max_length=255)
     items: list[PurchaseRequestItemCreate] = Field(min_length=1)
 
+    @field_validator("note")
+    @classmethod
+    def _normalize_note(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
+
     @field_validator("items")
     @classmethod
     def _unique_items(
