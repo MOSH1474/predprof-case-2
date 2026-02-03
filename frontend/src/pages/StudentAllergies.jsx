@@ -1,47 +1,43 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { apiRequest } from "../api/client.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
-const PREFERENCES = [
-  "Без мяса",
-  "Без молочных",
-  "Без глютена",
-  "Постное",
-  "Халяль",
-  "Вегетарианское",
-];
-
 const emptyForm = {
   allergyIds: [],
-  preferences: [],
-  notes: "",
+  preferencesText: "",
 };
 
 const parseDietaryPreferences = (value) => {
   if (!value) {
-    return { preferences: [], notes: "" };
+    return "";
   }
   try {
     const parsed = JSON.parse(value);
-    if (Array.isArray(parsed.preferences)) {
-      return {
-        preferences: parsed.preferences,
-        notes: parsed.notes || "",
-      };
+    if (parsed && typeof parsed === "object") {
+      if (typeof parsed.preferencesText === "string") {
+        return parsed.preferencesText;
+      }
+      const parts = [];
+      if (Array.isArray(parsed.preferences)) {
+        parts.push(...parsed.preferences);
+      }
+      if (typeof parsed.notes === "string" && parsed.notes.trim()) {
+        parts.push(parsed.notes.trim());
+      }
+      if (parts.length) {
+        return parts.join(", ");
+      }
     }
   } catch {
     // fallback to plain string
   }
-  return { preferences: [], notes: value };
+  return value;
 };
 
-const serializeDietaryPreferences = (preferences, notes) => {
-  const trimmedNotes = notes.trim();
-  if (!preferences.length && !trimmedNotes) {
-    return null;
-  }
-  return JSON.stringify({ preferences, notes: trimmedNotes });
+const serializeDietaryPreferences = (preferencesText) => {
+  const trimmed = preferencesText.trim();
+  return trimmed ? trimmed : null;
 };
 
 export default function StudentAllergies() {
@@ -53,14 +49,13 @@ export default function StudentAllergies() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [initialHadData, setInitialHadData] = useState(false);
 
-  const summary = useMemo(() => {
-    const selectedAllergies = allergies
+  const selectedAllergies = useMemo(() => {
+    return allergies
       .filter((item) => form.allergyIds.includes(item.id))
       .map((item) => item.name);
-    const items = [...selectedAllergies, ...form.preferences];
-    return items.length ? items.join(", ") : "Ничего не выбрано";
-  }, [allergies, form.allergyIds, form.preferences]);
+  }, [allergies, form.allergyIds]);
 
   useEffect(() => {
     if (!token) {
@@ -72,19 +67,22 @@ export default function StudentAllergies() {
       setError("");
       setLoadError(false);
       try {
-        const allergiesResponse = await apiRequest("/allergies", { token });
+        const allergiesResponse = await apiRequest("/allergies/", { token });
         setAllergies(allergiesResponse.items || []);
 
         const preferencesResponse = await apiRequest("/preferences/me", { token });
-        const parsed = parseDietaryPreferences(
+        const allergyIds = (preferencesResponse.allergies || []).map(
+          (item) => item.id
+        );
+        const preferencesText = parseDietaryPreferences(
           preferencesResponse.dietary_preferences
         );
         setForm({
-          allergyIds: (preferencesResponse.allergies || []).map((item) => item.id),
-          preferences: parsed.preferences,
-          notes: parsed.notes,
+          allergyIds,
+          preferencesText,
         });
-      } catch (err) {
+        setInitialHadData(Boolean(allergyIds.length || preferencesText.trim()));
+      } catch {
         setLoadError(true);
       } finally {
         setLoading(false);
@@ -119,26 +117,8 @@ export default function StudentAllergies() {
     }
   };
 
-  const togglePreference = (value) => {
-    setForm((prev) => {
-      const values = new Set(prev.preferences);
-      if (values.has(value)) {
-        values.delete(value);
-      } else {
-        values.add(value);
-      }
-      return { ...prev, preferences: Array.from(values) };
-    });
-    if (error) {
-      setError("");
-    }
-    if (success) {
-      setSuccess("");
-    }
-  };
-
-  const handleNotesChange = (event) => {
-    setForm((prev) => ({ ...prev, notes: event.target.value }));
+  const handlePreferenceChange = (event) => {
+    setForm((prev) => ({ ...prev, preferencesText: event.target.value }));
     if (error) {
       setError("");
     }
@@ -150,8 +130,12 @@ export default function StudentAllergies() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!form.allergyIds.length && !form.preferences.length && !form.notes.trim()) {
-      setError("Укажите хотя бы один аллерген, предпочтение или комментарий.");
+    if (
+      !form.allergyIds.length &&
+      !form.preferencesText.trim() &&
+      !initialHadData
+    ) {
+      setError("Укажите хотя бы один аллерген или предпочтение.");
       return;
     }
 
@@ -163,10 +147,7 @@ export default function StudentAllergies() {
         token,
         body: {
           allergy_ids: form.allergyIds,
-          dietary_preferences: serializeDietaryPreferences(
-            form.preferences,
-            form.notes
-          ),
+          dietary_preferences: serializeDietaryPreferences(form.preferencesText),
         },
       });
       setSuccess("Данные сохранены. Мы учтем их при подборе меню.");
@@ -185,11 +166,18 @@ export default function StudentAllergies() {
 
   return (
     <section className="page">
-      <header className="auth-header">
-        <h2>Аллергии и предпочтения</h2>
-        <p>
-          Укажите аллергены и особенности питания — мы учтем их при подборе блюд.
-        </p>
+      <header className="auth-header page-header-row">
+        <div>
+          <h2>Пищевые предпочтения</h2>
+          <p>
+            Укажите аллергены и особенности питания — мы учтем их при подборе блюд.
+          </p>
+        </div>
+        <div className="button-row">
+          <Link className="secondary-button" to="/student/menu">
+            К меню
+          </Link>
+        </div>
       </header>
 
       {loading ? (
@@ -202,6 +190,7 @@ export default function StudentAllergies() {
               сохранить.
             </div>
           )}
+
           <div className="form-group">
             <h3>Аллергены</h3>
             <div className="option-grid">
@@ -223,35 +212,23 @@ export default function StudentAllergies() {
                 </div>
               )}
             </div>
-          </div>
-
-          <div className="form-group">
-            <h3>Пищевые предпочтения</h3>
-            <div className="option-grid">
-              {PREFERENCES.map((item) => (
-                <label key={item} className="option-card">
-                  <input
-                    type="checkbox"
-                    checked={form.preferences.includes(item)}
-                    onChange={() => togglePreference(item)}
-                  />
-                  <span>{item}</span>
-                </label>
-              ))}
-            </div>
+            {selectedAllergies.length > 0 && (
+              <div className="summary">
+                Выбрано: {selectedAllergies.join(", ")}
+              </div>
+            )}
           </div>
 
           <label className="form-field">
-            Другое / комментарий
+            Предпочтения и ограничения
             <textarea
               rows="4"
-              value={form.notes}
-              onChange={handleNotesChange}
-              placeholder="Например: аллергия на яблоки, непереносимость лактозы..."
+              name="preferencesText"
+              value={form.preferencesText}
+              onChange={handlePreferenceChange}
+              placeholder="Например: без мяса, без глютена, постное"
             />
           </label>
-
-          <div className="summary">Выбрано: {summary}</div>
 
           {error && (
             <div className="form-error" role="alert">
