@@ -3,10 +3,12 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+from fastapi import HTTPException
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from ..models import Menu, Payment, PaymentStatus, PaymentType
+from ..models import MealIssue, MealIssueStatus, Menu, Payment, PaymentStatus, PaymentType
 from ..models.utils import utcnow
 from .errors import raise_http_400, raise_http_404
 
@@ -19,6 +21,73 @@ async def _get_menu(menu_id: int, db: AsyncSession) -> Menu:
     if not menu:
         raise_http_404("Menu not found")
     return menu
+
+
+async def _get_menu_with_items(menu_id: int, db: AsyncSession) -> Menu:
+    result = await db.execute(
+        select(Menu).options(selectinload(Menu.menu_items)).where(Menu.id == menu_id)
+    )
+    menu = result.scalar_one_or_none()
+    if not menu:
+        raise_http_404("Menu not found")
+    return menu
+
+
+async def _get_meal_issue(user_id: int, menu_id: int, db: AsyncSession) -> MealIssue | None:
+    result = await db.execute(
+        select(MealIssue).where(
+            MealIssue.user_id == user_id,
+            MealIssue.menu_id == menu_id,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+def _consume_menu_items(menu: Menu) -> None:
+    for item in menu.menu_items:
+        if item.remaining_qty is None:
+            continue
+        if item.remaining_qty <= 0:
+            raise_http_400("Not enough menu items to issue meal")
+        item.remaining_qty -= 1
+
+
+async def _create_issued_meals_for_period(
+    user_id: int, period_start: date, period_end: date, db: AsyncSession
+) -> None:
+    result = await db.execute(
+        select(Menu)
+        .options(selectinload(Menu.menu_items))
+        .where(Menu.menu_date >= period_start, Menu.menu_date <= period_end)
+        .order_by(Menu.menu_date, Menu.id)
+    )
+    menus = list(result.scalars().all())
+    if not menus:
+        return
+
+    menu_ids = [menu.id for menu in menus]
+    existing_result = await db.execute(
+        select(MealIssue.menu_id).where(
+            MealIssue.user_id == user_id, MealIssue.menu_id.in_(menu_ids)
+        )
+    )
+    existing_menu_ids = {row[0] for row in existing_result.all()}
+
+    for menu in menus:
+        if menu.id in existing_menu_ids:
+            continue
+        try:
+            _consume_menu_items(menu)
+        except HTTPException as exc:
+            if exc.detail == "Not enough menu items to issue meal":
+                continue
+            raise
+        issue = MealIssue(
+            user_id=user_id,
+            menu_id=menu.id,
+            status=MealIssueStatus.ISSUED,
+        )
+        db.add(issue)
 
 
 async def _has_paid_one_time(user_id: int, menu_id: int, db: AsyncSession) -> bool:
@@ -87,15 +156,24 @@ async def is_meal_paid(user_id: int, menu: Menu, db: AsyncSession) -> bool:
 
 
 async def create_one_time_payment(
-    user_id: int, menu_id: int, db: AsyncSession
+    user_id: int,
+    menu_id: int,
+    db: AsyncSession,
+    auto_issue: bool = True,
 ) -> Payment:
-    menu = await _get_menu(menu_id, db)
+    menu = await _get_menu_with_items(menu_id, db)
     if menu.price is None:
         raise_http_400("Menu has no price")
     if await _has_active_subscription_on_date(user_id, menu.menu_date, db):
         raise_http_400("Meal already covered by subscription")
     if await _has_paid_one_time(user_id, menu_id, db):
         raise_http_400("Menu already paid")
+
+    if auto_issue:
+        issue = await _get_meal_issue(user_id, menu.id, db)
+        if issue:
+            raise_http_400("Meal already issued")
+        _consume_menu_items(menu)
 
     payment = Payment(
         user_id=user_id,
@@ -107,6 +185,13 @@ async def create_one_time_payment(
         paid_at=utcnow(),
     )
     db.add(payment)
+    if auto_issue:
+        meal_issue = MealIssue(
+            user_id=user_id,
+            menu_id=menu.id,
+            status=MealIssueStatus.ISSUED,
+        )
+        db.add(meal_issue)
     await db.commit()
     await db.refresh(payment)
     return payment
@@ -134,6 +219,7 @@ async def create_subscription_payment(
         period_end=period_end,
     )
     db.add(payment)
+    await _create_issued_meals_for_period(user_id, period_start, period_end, db)
     await db.commit()
     await db.refresh(payment)
     return payment

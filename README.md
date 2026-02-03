@@ -46,6 +46,25 @@ docker compose up -d db
 Порт БД проброшен по умолчанию (`5432:5432`), поэтому локально используй
 `DB_HOST=127.0.0.1` в `.env`.
 
+## Тесты
+
+Вариант 1 — локально (БД в Docker):
+```
+docker compose up -d db
+cd backend
+uv sync
+uv run alembic upgrade head
+uv run pytest -vv
+```
+
+Вариант 2 — через Docker Compose:
+```
+docker compose up -d db
+docker compose run --rm backend sh -c "uv sync --dev && uv run pytest -vv"
+```
+Примечание: базовый образ backend ставит зависимости без dev, поэтому для тестов внутри
+контейнера выполняется `uv sync --dev`.
+
 
 ## Локальная разработка без Docker
 
@@ -97,3 +116,40 @@ server: {
   },
 }
 ```
+# Заполнение тестовыми данными (seed)
+
+1. Запустить БД (PostgreSQL через Docker):
+
+```bash
+docker compose up -d db
+```
+
+2. Применить миграции:
+
+```bash
+uv run alembic upgrade head
+```
+
+3. Засеять тестовые данные:
+
+```bash
+uv run python scripts/seed.py
+```
+
+### Seed через Docker Compose
+Если хочешь выполнить сид внутри контейнера:
+
+```bash
+docker compose up -d db
+docker compose run --rm backend sh -c "alembic upgrade head && uv run python scripts/seed.py"
+```
+
+После сидирования появятся пользователи:
+- `admin@example.com`
+- `cook@example.com`
+- `student@example.com`
+
+Пароль для всех: `Password123!`
+
+Важно: `seed.py` требует, чтобы миграции уже были применены, иначе в БД не будет enum‑типов
+(`inventory_direction`, `payment_status` и т.п.), и скрипт упадёт.

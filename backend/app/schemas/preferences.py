@@ -14,6 +14,14 @@ class PreferencesUpdateRequest(BaseModel):
     dietary_preferences: str | None = Field(default=None, max_length=1000)
     allergy_ids: list[int] | None = None
 
+    @field_validator("dietary_preferences")
+    @classmethod
+    def _normalize_preferences(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
+
     @field_validator("allergy_ids")
     @classmethod
     def _validate_allergy_ids(cls, value: list[int] | None) -> list[int] | None:

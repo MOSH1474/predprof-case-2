@@ -13,6 +13,22 @@ class RegisterRequest(BaseModel):
     full_name: str = Field(min_length=1, max_length=255)
     dietary_preferences: str | None = Field(default=None, max_length=1000)
 
+    @field_validator("full_name")
+    @classmethod
+    def _normalize_full_name(cls, value: str) -> str:
+        trimmed = value.strip()
+        if not trimmed:
+            raise ValueError("full_name cannot be empty")
+        return trimmed
+
+    @field_validator("dietary_preferences")
+    @classmethod
+    def _normalize_preferences(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
+
     @field_validator("password")
     @classmethod
     def _password_bytes(cls, value: str) -> str:

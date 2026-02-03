@@ -28,7 +28,8 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 @router.get(
     "/me",
     response_model=PaymentListResponse,
-    **roles_docs("student", "admin"),
+    **roles_docs("student", "admin", notes="Список оплат текущего пользователя."),
+    summary="Мои оплаты",
 )
 async def list_my_payments_endpoint(
     db: AsyncSession = Depends(get_db),
@@ -47,18 +48,30 @@ async def list_my_payments_endpoint(
     **roles_docs(
         "student",
         "admin",
+        notes=(
+            "Создает разовый платеж за конкретное меню. "
+            "Цена берется из `menu.price`. "
+            "Если уже есть активный абонемент на дату меню, платеж отклоняется. "
+            "Для ученика создается запись выдачи со статусом `issued` (ожидание выдачи)."
+        ),
         extra_responses={
             400: error_response("Menu already paid", "Bad request"),
             404: error_response("Menu not found", "Not found"),
         },
     ),
+    summary="Оплата одного меню",
 )
 async def create_one_time_payment_endpoint(
     payload: PaymentCreateOneTime,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_roles(UserRole.STUDENT, UserRole.ADMIN)),
 ) -> PaymentPublic:
-    payment = await create_one_time_payment(current_user.id, payload.menu_id, db)
+    payment = await create_one_time_payment(
+        current_user.id,
+        payload.menu_id,
+        db,
+        auto_issue=current_user.role == UserRole.STUDENT,
+    )
     return PaymentPublic.model_validate(payment)
 
 
@@ -69,10 +82,16 @@ async def create_one_time_payment_endpoint(
     **roles_docs(
         "student",
         "admin",
+        notes=(
+            "Создает абонемент на период. "
+            "Периоды не могут пересекаться с уже оплаченными абонементами. "
+            "Для существующих меню в периоде создаются выдачи со статусом `issued`."
+        ),
         extra_responses={
             400: error_response("Subscription overlaps existing subscription", "Bad request")
         },
     ),
+    summary="Оплата абонемента",
 )
 async def create_subscription_payment_endpoint(
     payload: PaymentCreateSubscription,
@@ -91,8 +110,10 @@ async def create_subscription_payment_endpoint(
     **roles_docs(
         "student",
         "admin",
+        notes="Возвращает активный абонемент на текущую дату.",
         extra_responses={404: error_response("Active subscription not found", "Not found")},
     ),
+    summary="Активный абонемент",
 )
 async def get_active_subscription_endpoint(
     db: AsyncSession = Depends(get_db),
