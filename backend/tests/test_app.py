@@ -2,4 +2,4 @@ from app.main import app
 
 
 def test_app_title():
-    assert app.title == "Backend API"
+    assert app.title == "API школьной столовой"

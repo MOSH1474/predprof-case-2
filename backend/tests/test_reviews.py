@@ -42,7 +42,7 @@ async def _create_menu(client, token: str, dish_id: int) -> int:
         "/menus/",
         headers=_auth_headers(token),
         json={
-            "menu_date": date(2025, 2, 1).isoformat(),
+            "menu_date": date(2025, 2, 7).isoformat(),
             "meal_type": "lunch",
             "title": "Lunch",
             "price": "150.00",

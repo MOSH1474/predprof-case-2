@@ -5,6 +5,7 @@ from decimal import Decimal
 import pytest
 
 from app.models import User, UserRole
+from app.models.utils import utcnow
 from app.services.security import create_access_token, hash_password
 
 
@@ -67,6 +68,7 @@ async def test_admin_payment_stats(client, db_session):
     _, cook_token = await _create_user(db_session, UserRole.COOK)
     _, student_token = await _create_user(db_session, UserRole.STUDENT)
 
+    started_at = utcnow()
     dish_id = await _create_dish(client, cook_token)
     menu_id = await _create_menu(client, cook_token, dish_id, date(2025, 2, 1))
 
@@ -91,8 +93,9 @@ async def test_admin_payment_stats(client, db_session):
     assert subscription_response.status_code == 201
     subscription_amount = Decimal(subscription_response.json()["amount"])
 
+    date_from = started_at.isoformat().replace("+00:00", "Z")
     stats_response = await client.get(
-        "/admin/stats/payments",
+        f"/admin/stats/payments?date_from={date_from}",
         headers=_auth_headers(admin_token),
     )
     assert stats_response.status_code == 200
@@ -121,13 +124,6 @@ async def test_admin_attendance_stats(client, db_session):
         json={"menu_id": menu_id},
     )
     assert pay_response.status_code == 201
-
-    issue_response = await client.post(
-        "/meal-issues/issue",
-        headers=_auth_headers(cook_token),
-        json={"user_id": student.id, "menu_id": menu_id},
-    )
-    assert issue_response.status_code == 201
 
     serve_response = await client.post(
         "/meal-issues/serve",

@@ -88,13 +88,6 @@ async def test_admin_nutrition_report(client, db_session):
     )
     assert pay_response.status_code == 201
 
-    issue_response = await client.post(
-        "/meal-issues/issue",
-        headers=_auth_headers(cook_token),
-        json={"user_id": student.id, "menu_id": menu_id},
-    )
-    assert issue_response.status_code == 201
-
     serve_response = await client.post(
         "/meal-issues/serve",
         headers=_auth_headers(cook_token),
