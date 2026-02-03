@@ -8,6 +8,8 @@ const MEAL_TYPE_LABELS = {
   lunch: "Обед",
 };
 
+const SUBSCRIPTION_KEY = "canteen_subscription";
+
 const formatDate = (value) => {
   if (!value) {
     return "";
@@ -19,11 +21,36 @@ const formatDate = (value) => {
   return parsed.toLocaleDateString("ru-RU");
 };
 
+const loadSubscription = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(SUBSCRIPTION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveSubscription = (data) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+  if (!data) {
+    window.localStorage.removeItem(SUBSCRIPTION_KEY);
+    return;
+  }
+  window.localStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify(data));
+};
+
 export default function StudentMenu() {
   const { token, user } = useAuth();
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [subscription, setSubscription] = useState(loadSubscription);
 
   const sortedMenus = useMemo(() => {
     return [...menus].sort((a, b) => {
@@ -42,7 +69,7 @@ export default function StudentMenu() {
       setLoading(true);
       setError("");
       try {
-        const response = await apiRequest("/menus", { token });
+        const response = await apiRequest("/menus/", { token });
         setMenus(response.items || []);
       } catch (err) {
         setError(err.message);
@@ -54,12 +81,32 @@ export default function StudentMenu() {
     loadMenus();
   }, [token]);
 
+  useEffect(() => {
+    saveSubscription(subscription);
+  }, [subscription]);
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }
   if (user?.role === "cook") {
     return <Navigate to="/cook" replace />;
   }
+
+  const handleBuySubscription = () => {
+    const start = new Date();
+    const end = new Date();
+    end.setDate(start.getDate() + 30);
+    setSubscription({
+      start: start.toISOString(),
+      end: end.toISOString(),
+    });
+    setNotice("Абонемент оформлен (заглушка).");
+  };
+
+  const handleMealReceive = (menu) => {
+    const label = MEAL_TYPE_LABELS[menu.meal_type] || menu.meal_type;
+    setNotice(`Отметка получения (${label}) пока в разработке.`);
+  };
 
   return (
     <section className="page">
@@ -72,11 +119,25 @@ export default function StudentMenu() {
           <Link className="secondary-button" to="/student/allergies">
             Аллергии
           </Link>
-          <Link className="primary-button" to="/student/pay">
-            Оплата
-          </Link>
+          {subscription?.start && subscription?.end ? (
+            <div className="summary">
+              Абонемент: {formatDate(subscription.start)} —
+              {" "}
+              {formatDate(subscription.end)}
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="primary-button"
+              onClick={handleBuySubscription}
+            >
+              Купить абонемент
+            </button>
+          )}
         </div>
       </header>
+
+      {notice && <div className="form-hint">{notice}</div>}
 
       {loading ? (
         <div className="form-hint">Загрузка меню...</div>
@@ -129,6 +190,15 @@ export default function StudentMenu() {
                 {(!menu.menu_items || menu.menu_items.length === 0) && (
                   <div className="summary">Позиции меню не заполнены.</div>
                 )}
+              </div>
+              <div className="button-row">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => handleMealReceive(menu)}
+                >
+                  Получить прием пищи
+                </button>
               </div>
             </article>
           ))}
