@@ -65,6 +65,13 @@ async def test_meal_issue_flow_with_cook_and_student(client, db_session):
 
     menu_id = await _create_menu(client, cook_token, date(2025, 2, 1), remaining_qty=1)
 
+    payment_response = await client.post(
+        "/payments/one-time",
+        headers=_auth_headers(student_token),
+        json={"menu_id": menu_id},
+    )
+    assert payment_response.status_code == 201
+
     serve_response = await client.post(
         "/meal-issues/serve",
         headers=_auth_headers(cook_token),
@@ -105,6 +112,13 @@ async def test_meal_issue_fails_when_no_remaining_qty(client, db_session):
 
     menu_id = await _create_menu(client, cook_token, date(2025, 2, 2), remaining_qty=0)
 
+    payment_response = await client.post(
+        "/payments/one-time",
+        headers=_auth_headers(student_token),
+        json={"menu_id": menu_id},
+    )
+    assert payment_response.status_code == 201
+
     serve_response = await client.post(
         "/meal-issues/serve",
         headers=_auth_headers(cook_token),
@@ -112,6 +126,22 @@ async def test_meal_issue_fails_when_no_remaining_qty(client, db_session):
     )
     assert serve_response.status_code == 400
     assert serve_response.json()["detail"] == "Not enough menu items to issue meal"
+
+
+@pytest.mark.anyio
+async def test_meal_issue_fails_without_payment(client, db_session):
+    _, cook_token = await _create_user(db_session, UserRole.COOK)
+    student, _ = await _create_user(db_session, UserRole.STUDENT)
+
+    menu_id = await _create_menu(client, cook_token, date(2025, 2, 4), remaining_qty=1)
+
+    serve_response = await client.post(
+        "/meal-issues/serve",
+        headers=_auth_headers(cook_token),
+        json={"user_id": student.id, "menu_id": menu_id},
+    )
+    assert serve_response.status_code == 400
+    assert serve_response.json()["detail"] == "Meal is not paid"
 
 
 @pytest.mark.anyio

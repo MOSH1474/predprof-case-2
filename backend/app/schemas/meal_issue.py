@@ -4,6 +4,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..models import MealIssueStatus
+
 
 class MealIssueCreate(BaseModel):
     menu_id: int = Field(gt=0)
@@ -21,7 +23,7 @@ class MealIssuePublic(BaseModel):
     user_id: int
     menu_id: int
     served_by_id: int | None
-    status: str
+    status: MealIssueStatus = Field(description="issued | confirmed")
     served_at: datetime | None
     confirmed_at: datetime | None
     created_at: datetime

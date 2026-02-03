@@ -4,9 +4,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from ..models import MealIssue, Menu, User, UserRole
+from ..models import MealIssue, MealIssueStatus, Menu, User, UserRole
 from ..models.utils import utcnow
 from .errors import raise_http_400, raise_http_404
+from .payment_service import is_meal_paid
 
 
 async def _get_user(user_id: int, db: AsyncSession) -> User:
@@ -59,10 +60,10 @@ async def confirm_meal(user_id: int, menu_id: int, db: AsyncSession) -> MealIssu
     await _get_menu(menu_id, db)
     issue = await _get_meal_issue(user_id, menu_id, db)
     if issue:
-        if issue.status == "confirmed":
+        if issue.status == MealIssueStatus.CONFIRMED:
             raise_http_400("Meal already confirmed")
-        if issue.status == "issued":
-            issue.status = "confirmed"
+        if issue.status == MealIssueStatus.ISSUED:
+            issue.status = MealIssueStatus.CONFIRMED
             issue.confirmed_at = utcnow()
             await db.commit()
             await db.refresh(issue)
@@ -79,10 +80,12 @@ async def serve_meal(
     if user.role != UserRole.STUDENT:
         raise_http_400("Only students can receive meals")
     menu = await _get_menu(menu_id, db)
+    if not await is_meal_paid(user_id, menu, db):
+        raise_http_400("Meal is not paid")
 
     issue = await _get_meal_issue(user_id, menu_id, db)
     if issue:
-        if issue.status == "confirmed":
+        if issue.status == MealIssueStatus.CONFIRMED:
             raise_http_400("Meal already confirmed")
         raise_http_400("Meal already issued")
 
@@ -91,7 +94,7 @@ async def serve_meal(
         user_id=user_id,
         menu_id=menu.id,
         served_by_id=served_by_id,
-        status="issued",
+        status=MealIssueStatus.ISSUED,
         served_at=utcnow(),
     )
     db.add(issue)

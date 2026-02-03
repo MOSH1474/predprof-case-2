@@ -7,6 +7,7 @@ from .routers import (
     dishes_router,
     meal_issues_router,
     menus_router,
+    payments_router,
     preferences_router,
 )
 
@@ -16,6 +17,7 @@ OPENAPI_TAGS = [
     {"name": "dishes", "description": "Блюда и управление ими"},
     {"name": "menus", "description": "Меню и позиции меню"},
     {"name": "preferences", "description": "Предпочтения и аллергия студентов"},
+    {"name": "payments", "description": "One-time and subscription payments"},
     {"name": "meal-issues", "description": "Meal issuance and confirmations"},
 ]
 
@@ -25,6 +27,7 @@ app.include_router(allergies_router)
 app.include_router(dishes_router)
 app.include_router(meal_issues_router)
 app.include_router(menus_router)
+app.include_router(payments_router)
 app.include_router(preferences_router)
 
 

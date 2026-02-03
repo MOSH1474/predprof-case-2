@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import TYPE_CHECKING
+from enum import Enum
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import Base
@@ -14,13 +15,27 @@ if TYPE_CHECKING:
     from .user import User
 
 
+class PurchaseRequestStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
 class PurchaseRequest(Base):
     __tablename__ = "purchase_requests"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     requested_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     approved_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
-    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
+    status: Mapped[PurchaseRequestStatus] = mapped_column(
+        SAEnum(
+            PurchaseRequestStatus,
+            name="purchase_request_status",
+            values_callable=lambda enum_cls: [item.value for item in enum_cls],
+        ),
+        nullable=False,
+        default=PurchaseRequestStatus.PENDING,
+    )
     note: Mapped[str | None] = mapped_column(String(255))
     requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
