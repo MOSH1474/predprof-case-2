@@ -49,6 +49,7 @@ export default function StudentAllergies() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [initialHadData, setInitialHadData] = useState(false);
 
   const selectedAllergies = useMemo(() => {
     return allergies
@@ -70,12 +71,17 @@ export default function StudentAllergies() {
         setAllergies(allergiesResponse.items || []);
 
         const preferencesResponse = await apiRequest("/preferences/me", { token });
+        const allergyIds = (preferencesResponse.allergies || []).map(
+          (item) => item.id
+        );
+        const preferencesText = parseDietaryPreferences(
+          preferencesResponse.dietary_preferences
+        );
         setForm({
-          allergyIds: (preferencesResponse.allergies || []).map((item) => item.id),
-          preferencesText: parseDietaryPreferences(
-            preferencesResponse.dietary_preferences
-          ),
+          allergyIds,
+          preferencesText,
         });
+        setInitialHadData(Boolean(allergyIds.length || preferencesText.trim()));
       } catch {
         setLoadError(true);
       } finally {
@@ -124,7 +130,11 @@ export default function StudentAllergies() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!form.allergyIds.length && !form.preferencesText.trim()) {
+    if (
+      !form.allergyIds.length &&
+      !form.preferencesText.trim() &&
+      !initialHadData
+    ) {
       setError("Укажите хотя бы один аллерген или предпочтение.");
       return;
     }
