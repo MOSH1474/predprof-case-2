@@ -15,6 +15,7 @@ from ..schemas.meal_issue import (
 from ..services.authorization import require_roles
 from ..services.meal_issue_service import (
     confirm_meal,
+    issue_meal,
     list_meal_issues,
     serve_meal,
 )
@@ -59,7 +60,7 @@ async def confirm_my_meal(
 
 
 @router.post(
-    "/serve",
+    "/issue",
     response_model=MealIssuePublic,
     status_code=status.HTTP_201_CREATED,
     **roles_docs(
@@ -67,6 +68,28 @@ async def confirm_my_meal(
         "admin",
         extra_responses={
             400: error_response("Meal already issued", "Bad request"),
+            404: error_response("User not found", "Not found"),
+        },
+    ),
+)
+async def issue_meal_to_student(
+    payload: MealIssueServeRequest,
+    db: AsyncSession = Depends(get_db),
+    _: object = Depends(require_roles(UserRole.COOK)),
+) -> MealIssuePublic:
+    issue = await issue_meal(payload.user_id, payload.menu_id, db)
+    return MealIssuePublic.model_validate(issue)
+
+
+@router.post(
+    "/serve",
+    response_model=MealIssuePublic,
+    status_code=status.HTTP_201_CREATED,
+    **roles_docs(
+        "cook",
+        "admin",
+        extra_responses={
+            400: error_response("Meal already served", "Bad request"),
             404: error_response("User not found", "Not found"),
         },
     ),

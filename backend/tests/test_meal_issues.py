@@ -58,6 +58,16 @@ async def _create_menu(client, cook_token: str, menu_date: date, remaining_qty: 
     return menu_response.json()["id"]
 
 
+async def _issue_meal(client, cook_token: str, student_id: int, menu_id: int) -> dict:
+    response = await client.post(
+        "/meal-issues/issue",
+        headers=_auth_headers(cook_token),
+        json={"user_id": student_id, "menu_id": menu_id},
+    )
+    assert response.status_code == 201
+    return response.json()
+
+
 @pytest.mark.anyio
 async def test_meal_issue_flow_with_cook_and_student(client, db_session):
     cook, cook_token = await _create_user(db_session, UserRole.COOK)
@@ -72,13 +82,8 @@ async def test_meal_issue_flow_with_cook_and_student(client, db_session):
     )
     assert payment_response.status_code == 201
 
-    serve_response = await client.post(
-        "/meal-issues/serve",
-        headers=_auth_headers(cook_token),
-        json={"user_id": student.id, "menu_id": menu_id},
-    )
-    assert serve_response.status_code == 201
-    assert serve_response.json()["status"] == "issued"
+    issue_payload = await _issue_meal(client, cook_token, student.id, menu_id)
+    assert issue_payload["status"] == "issued"
 
     menu_response = await client.get(
         f"/menus/{menu_id}",
@@ -86,6 +91,14 @@ async def test_meal_issue_flow_with_cook_and_student(client, db_session):
     )
     assert menu_response.status_code == 200
     assert menu_response.json()["menu_items"][0]["remaining_qty"] == 0
+
+    serve_response = await client.post(
+        "/meal-issues/serve",
+        headers=_auth_headers(cook_token),
+        json={"user_id": student.id, "menu_id": menu_id},
+    )
+    assert serve_response.status_code == 201
+    assert serve_response.json()["status"] == "served"
 
     confirm_response = await client.post(
         "/meal-issues/me",
@@ -119,13 +132,13 @@ async def test_meal_issue_fails_when_no_remaining_qty(client, db_session):
     )
     assert payment_response.status_code == 201
 
-    serve_response = await client.post(
-        "/meal-issues/serve",
+    issue_response = await client.post(
+        "/meal-issues/issue",
         headers=_auth_headers(cook_token),
         json={"user_id": student.id, "menu_id": menu_id},
     )
-    assert serve_response.status_code == 400
-    assert serve_response.json()["detail"] == "Not enough menu items to issue meal"
+    assert issue_response.status_code == 400
+    assert issue_response.json()["detail"] == "Not enough menu items to issue meal"
 
 
 @pytest.mark.anyio
@@ -135,13 +148,13 @@ async def test_meal_issue_fails_without_payment(client, db_session):
 
     menu_id = await _create_menu(client, cook_token, date(2025, 2, 4), remaining_qty=1)
 
-    serve_response = await client.post(
-        "/meal-issues/serve",
+    issue_response = await client.post(
+        "/meal-issues/issue",
         headers=_auth_headers(cook_token),
         json={"user_id": student.id, "menu_id": menu_id},
     )
-    assert serve_response.status_code == 400
-    assert serve_response.json()["detail"] == "Meal is not paid"
+    assert issue_response.status_code == 400
+    assert issue_response.json()["detail"] == "Meal is not paid"
 
 
 @pytest.mark.anyio
@@ -158,3 +171,29 @@ async def test_student_cannot_confirm_without_issue(client, db_session):
     )
     assert response.status_code == 400
     assert response.json()["detail"] == "Meal not issued yet"
+
+
+@pytest.mark.anyio
+async def test_student_cannot_confirm_before_served(client, db_session):
+    _, cook_token = await _create_user(db_session, UserRole.COOK)
+    student, student_token = await _create_user(db_session, UserRole.STUDENT)
+
+    menu_id = await _create_menu(client, cook_token, date(2025, 2, 6), remaining_qty=1)
+
+    payment_response = await client.post(
+        "/payments/one-time",
+        headers=_auth_headers(student_token),
+        json={"menu_id": menu_id},
+    )
+    assert payment_response.status_code == 201
+
+    issue_payload = await _issue_meal(client, cook_token, student.id, menu_id)
+    assert issue_payload["status"] == "issued"
+
+    response = await client.post(
+        "/meal-issues/me",
+        headers=_auth_headers(student_token),
+        json={"menu_id": menu_id},
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Meal not served yet"

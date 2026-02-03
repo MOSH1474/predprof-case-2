@@ -62,12 +62,14 @@ async def confirm_meal(user_id: int, menu_id: int, db: AsyncSession) -> MealIssu
     if issue:
         if issue.status == MealIssueStatus.CONFIRMED:
             raise_http_400("Meal already confirmed")
-        if issue.status == MealIssueStatus.ISSUED:
+        if issue.status == MealIssueStatus.SERVED:
             issue.status = MealIssueStatus.CONFIRMED
             issue.confirmed_at = utcnow()
             await db.commit()
             await db.refresh(issue)
             return issue
+        if issue.status == MealIssueStatus.ISSUED:
+            raise_http_400("Meal not served yet")
         raise_http_400("Meal issue has invalid status")
 
     raise_http_400("Meal not issued yet")
@@ -76,6 +78,25 @@ async def confirm_meal(user_id: int, menu_id: int, db: AsyncSession) -> MealIssu
 async def serve_meal(
     user_id: int, menu_id: int, served_by_id: int, db: AsyncSession
 ) -> MealIssue:
+    issue = await _get_meal_issue(user_id, menu_id, db)
+    if not issue:
+        raise_http_400("Meal not issued yet")
+    if issue.status == MealIssueStatus.CONFIRMED:
+        raise_http_400("Meal already confirmed")
+    if issue.status == MealIssueStatus.SERVED:
+        raise_http_400("Meal already served")
+    if issue.status == MealIssueStatus.ISSUED:
+        issue.status = MealIssueStatus.SERVED
+        issue.served_by_id = served_by_id
+        issue.served_at = utcnow()
+        await db.commit()
+        await db.refresh(issue)
+        return issue
+
+    raise_http_400("Meal issue has invalid status")
+
+
+async def issue_meal(user_id: int, menu_id: int, db: AsyncSession) -> MealIssue:
     user = await _get_user(user_id, db)
     if user.role != UserRole.STUDENT:
         raise_http_400("Only students can receive meals")
@@ -85,17 +106,19 @@ async def serve_meal(
 
     issue = await _get_meal_issue(user_id, menu_id, db)
     if issue:
+        if issue.status == MealIssueStatus.ISSUED:
+            raise_http_400("Meal already issued")
+        if issue.status == MealIssueStatus.SERVED:
+            raise_http_400("Meal already served")
         if issue.status == MealIssueStatus.CONFIRMED:
             raise_http_400("Meal already confirmed")
-        raise_http_400("Meal already issued")
+        raise_http_400("Meal issue has invalid status")
 
     _consume_menu_items(menu)
     issue = MealIssue(
         user_id=user_id,
         menu_id=menu.id,
-        served_by_id=served_by_id,
         status=MealIssueStatus.ISSUED,
-        served_at=utcnow(),
     )
     db.add(issue)
     await db.commit()

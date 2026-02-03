@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 class MealIssueStatus(str, Enum):
     ISSUED = "issued"
+    SERVED = "served"
     CONFIRMED = "confirmed"
 
 

@@ -23,7 +23,7 @@ class MealIssuePublic(BaseModel):
     user_id: int
     menu_id: int
     served_by_id: int | None
-    status: MealIssueStatus = Field(description="issued | confirmed")
+    status: MealIssueStatus = Field(description="issued | served | confirmed")
     served_at: datetime | None
     confirmed_at: datetime | None
     created_at: datetime
