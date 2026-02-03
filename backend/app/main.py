@@ -11,6 +11,7 @@ from .routers import (
     payments_router,
     preferences_router,
     products_router,
+    purchase_requests_router,
 )
 
 OPENAPI_TAGS = [
@@ -23,6 +24,7 @@ OPENAPI_TAGS = [
     {"name": "meal-issues", "description": "Meal issuance and confirmations"},
     {"name": "products", "description": "Products and inventory catalog"},
     {"name": "inventory-transactions", "description": "Inventory movements and adjustments"},
+    {"name": "purchase-requests", "description": "Заявки на закупку и согласование"},
 ]
 
 app = FastAPI(title="Backend API", root_path="/api/v1", openapi_tags=OPENAPI_TAGS)
@@ -35,6 +37,7 @@ app.include_router(menus_router)
 app.include_router(payments_router)
 app.include_router(preferences_router)
 app.include_router(products_router)
+app.include_router(purchase_requests_router)
 
 
 @app.get("/health", **public_docs())
