@@ -357,7 +357,7 @@ async def main() -> None:
             Decimal("120.00"),
             dish_oat,
         )
-        lunch = await get_or_create_menu(
+        await get_or_create_menu(
             db,
             today,
             MealType.LUNCH,

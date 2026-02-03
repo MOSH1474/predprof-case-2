@@ -8,7 +8,7 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from ..models import MealIssue, MealIssueStatus, Menu, MenuItem, Payment, PaymentStatus, PaymentType
+from ..models import MealIssue, MealIssueStatus, Menu, Payment, PaymentStatus, PaymentType
 from ..models.utils import utcnow
 from .errors import raise_http_400, raise_http_404
 
