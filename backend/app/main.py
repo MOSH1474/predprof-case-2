@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from .docs import public_docs
 from .routers import (
+    admin_reports_router,
     admin_stats_router,
     allergies_router,
     auth_router,
@@ -17,6 +18,7 @@ from .routers import (
 )
 
 OPENAPI_TAGS = [
+    {"name": "admin-reports", "description": "Admin nutrition and expense reports"},
     {"name": "admin-stats", "description": "Admin statistics and reporting"},
     {"name": "auth", "description": "Аутентификация и сессии пользователей"},
     {"name": "allergies", "description": "Аллергии и управление ими"},
@@ -32,6 +34,7 @@ OPENAPI_TAGS = [
 ]
 
 app = FastAPI(title="Backend API", root_path="/api/v1", openapi_tags=OPENAPI_TAGS)
+app.include_router(admin_reports_router)
 app.include_router(admin_stats_router)
 app.include_router(auth_router)
 app.include_router(allergies_router)
