@@ -38,15 +38,6 @@ Docker Compose читает `.env`, но для контейнера `backend` �
 cd backend
 uv run alembic revision --autogenerate -m "add something"
 ```
-
-## Локальная разработка без Docker
-### Backend (FastAPI + uv)
-```
-cd backend
-uv sync
-uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
 ### База в Docker (удобно для локального бэка)
 Можно поднять только Postgres и подключаться к нему из локального Python:
 ```
@@ -54,6 +45,16 @@ docker compose up -d db
 ```
 Порт БД проброшен по умолчанию (`5432:5432`), поэтому локально используй
 `DB_HOST=127.0.0.1` в `.env`.
+
+
+## Локальная разработка без Docker
+
+### Backend (FastAPI + uv)
+```
+cd backend
+uv sync
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
 ### Frontend (React + Vite)
 ```
