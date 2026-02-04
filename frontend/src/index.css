@@ -18,6 +18,41 @@ body {
   background: #f3f5f9;
 }
 
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 2rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e1e4ea;
+}
+
+.topbar-user {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.topbar-role {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+}
+
+.topbar-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.app-body {
+  padding: 1.75rem 2rem 2rem;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -154,6 +189,45 @@ a {
   border-color: #c7d2fe;
 }
 
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 1.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #e1e4ea;
+}
+
+.admin-tab {
+  padding: 0.55rem 1rem;
+  border-radius: 0.6rem 0.6rem 0 0;
+  border: 1px solid #e1e4ea;
+  border-bottom-color: transparent;
+  background: #f8fafc;
+  font-weight: 600;
+  color: #1f2937;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-tab:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  border-bottom-color: transparent;
+}
+
+.admin-tab.active {
+  background: #ffffff;
+  border-color: #c7d2fe;
+  border-bottom-color: transparent;
+  color: #1d4ed8;
+  box-shadow: inset 0 -3px 0 #1d4ed8;
+}
+
+.admin-tab.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .page-description {
   margin: 0.5rem 0 1.5rem;
   color: #4b5563;
@@ -282,12 +356,24 @@ a {
   min-width: 0;
 }
 
+.form-field select {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.6rem;
+  border: 1px solid #d1d5db;
+  font-weight: 400;
+  font-family: inherit;
+  width: 100%;
+  min-width: 0;
+  background: #ffffff;
+}
+
 .form-field textarea {
   resize: vertical;
 }
 
 .form-field input:focus,
-.form-field textarea:focus {
+.form-field textarea:focus,
+.form-field select:focus {
   outline: 2px solid #93c5fd;
   border-color: #60a5fa;
 }
@@ -343,6 +429,20 @@ a {
   color: #1e3a8a;
   font-weight: 600;
   cursor: pointer;
+}
+
+.danger-button {
+  padding: 0.75rem 1rem;
+  border-radius: 0.6rem;
+  border: 1px solid #fecaca;
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.danger-button:hover {
+  background: #fecaca;
 }
 
 .button-row {
@@ -426,6 +526,14 @@ a {
 }
 
 @media (max-width: 900px) {
+  .app-topbar {
+    padding: 0.85rem 1.5rem;
+  }
+
+  .app-body {
+    padding: 1.25rem 1.5rem 1.5rem;
+  }
+
   .app-shell {
     grid-template-columns: 1fr;
   }
