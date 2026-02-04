@@ -321,12 +321,24 @@ a {
   min-width: 0;
 }
 
+.form-field select {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.6rem;
+  border: 1px solid #d1d5db;
+  font-weight: 400;
+  font-family: inherit;
+  width: 100%;
+  min-width: 0;
+  background: #ffffff;
+}
+
 .form-field textarea {
   resize: vertical;
 }
 
 .form-field input:focus,
-.form-field textarea:focus {
+.form-field textarea:focus,
+.form-field select:focus {
   outline: 2px solid #93c5fd;
   border-color: #60a5fa;
 }
@@ -382,6 +394,20 @@ a {
   color: #1e3a8a;
   font-weight: 600;
   cursor: pointer;
+}
+
+.danger-button {
+  padding: 0.75rem 1rem;
+  border-radius: 0.6rem;
+  border: 1px solid #fecaca;
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.danger-button:hover {
+  background: #fecaca;
 }
 
 .button-row {

@@ -8,9 +8,9 @@ export default function AdminNav() {
       <NavLink to="/admin/stats" className={navClass}>
         Статистика
       </NavLink>
-      <span className="admin-tab is-disabled" aria-disabled="true">
+      <NavLink to="/admin/purchase-requests" className={navClass}>
         Заявки
-      </span>
+      </NavLink>
       <span className="admin-tab is-disabled" aria-disabled="true">
         Отчеты
       </span>
