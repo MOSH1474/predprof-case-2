@@ -8,6 +8,7 @@ import CookPurchases from "../pages/CookPurchases.jsx";
 import CookStock from "../pages/CookStock.jsx";
 import CookStockNew from "../pages/CookStockNew.jsx";
 import AdminPurchaseRequests from "../pages/AdminPurchaseRequests.jsx";
+import AdminReports from "../pages/AdminReports.jsx";
 import AdminStats from "../pages/AdminStats.jsx";
 import Login from "../pages/Login.jsx";
 import Register from "../pages/Register.jsx";
@@ -37,6 +38,7 @@ export default function AppRoutes() {
       <Route path="/cook/purchases" element={<CookPurchases />} />
       <Route path="/admin/stats" element={<AdminStats />} />
       <Route path="/admin/purchase-requests" element={<AdminPurchaseRequests />} />
+      <Route path="/admin/reports" element={<AdminReports />} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

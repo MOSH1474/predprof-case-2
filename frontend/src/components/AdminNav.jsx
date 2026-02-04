@@ -11,9 +11,9 @@ export default function AdminNav() {
       <NavLink to="/admin/purchase-requests" className={navClass}>
         Заявки
       </NavLink>
-      <span className="admin-tab is-disabled" aria-disabled="true">
+      <NavLink to="/admin/reports" className={navClass}>
         Отчеты
-      </span>
+      </NavLink>
     </nav>
   );
 }
