@@ -1,34 +1,34 @@
 erDiagram
   USER ||--o{ REVIEW : writes
   DISH ||--o{ REVIEW : receives
-  MENU ||--o{ REVIEW : context
+  MENU o|--o{ REVIEW : context
   USER ||--o{ PAYMENT : makes
-  MENU ||--o{ PAYMENT : for
+  MENU o|--o{ PAYMENT : for
   MENU ||--o{ MENU_ITEM : has
   DISH ||--o{ MENU_ITEM : includes
   USER ||--o{ MEAL_ISSUE : receives
   MENU ||--o{ MEAL_ISSUE : for
-  USER ||--o{ MEAL_ISSUE : serves
+  USER o|--o{ MEAL_ISSUE : serves
   USER ||--o{ USER_ALLERGIES : has
   ALLERGY ||--o{ USER_ALLERGIES : includes
   DISH ||--o{ DISH_ALLERGIES : has
   ALLERGY ||--o{ DISH_ALLERGIES : contains
   PRODUCT ||--o{ INVENTORY_TRANSACTION : movements
-  USER ||--o{ INVENTORY_TRANSACTION : created_by
+  USER o|--o{ INVENTORY_TRANSACTION : created_by
   PURCHASE_REQUEST ||--o{ PURCHASE_REQUEST_ITEM : includes
   PRODUCT ||--o{ PURCHASE_REQUEST_ITEM : requested
   USER ||--o{ PURCHASE_REQUEST : requested_by
-  USER ||--o{ PURCHASE_REQUEST : approved_by
+  USER o|--o{ PURCHASE_REQUEST : approved_by
   NOTIFICATION ||--o{ USER_NOTIFICATION : recipients
   USER ||--o{ USER_NOTIFICATION : receives
-  USER ||--o{ NOTIFICATION : created_by
+  USER o|--o{ NOTIFICATION : created_by
 
   USER {
     int id PK
     string email
     string full_name
     string password_hash
-    string role "student|cook|admin"
+    string role "STUDENT|COOK|ADMIN"
     text dietary_preferences
     bool is_active
     datetime created_at
@@ -91,8 +91,8 @@ erDiagram
     int menu_id FK
     decimal amount
     string currency
-    string payment_type
-    string status
+    string payment_type "one_time|subscription"
+    string status "pending|paid|failed|refunded"
     datetime paid_at
     date period_start
     date period_end
@@ -104,7 +104,7 @@ erDiagram
     int user_id FK
     int menu_id FK
     int served_by_id FK
-    string status
+    string status "issued|served|confirmed"
     datetime served_at
     datetime confirmed_at
     datetime created_at
@@ -122,7 +122,7 @@ erDiagram
     int id PK
     int product_id FK
     decimal quantity
-    string direction
+    string direction "in|out"
     string reason
     int created_by_id FK
     datetime created_at
@@ -132,7 +132,7 @@ erDiagram
     int id PK
     int requested_by_id FK
     int approved_by_id FK
-    string status
+    string status "pending|approved|rejected"
     string note
     datetime requested_at
     datetime decided_at
