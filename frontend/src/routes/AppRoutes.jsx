@@ -14,7 +14,6 @@ import Login from "../pages/Login.jsx";
 import Register from "../pages/Register.jsx";
 import StudentAllergies from "../pages/StudentAllergies.jsx";
 import StudentMenu from "../pages/StudentMenu.jsx";
-import StudentPay from "../pages/StudentPay.jsx";
 
 export default function AppRoutes() {
   return (
@@ -28,7 +27,7 @@ export default function AppRoutes() {
 
       <Route path="/student/menu" element={<StudentMenu />} />
       <Route path="/student/allergies" element={<StudentAllergies />} />
-      <Route path="/student/pay" element={<StudentPay />} />
+      <Route path="/student/pay" element={<Navigate to="/student/menu" replace />} />
       <Route path="/cook" element={<Cook />} />
       <Route path="/cook/meals" element={<CookMeals />} />
       <Route path="/cook/meals/log" element={<CookMealLog />} />
