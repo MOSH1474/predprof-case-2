@@ -31,6 +31,10 @@ export default function Login() {
       navigate("/cook", { replace: true });
       return;
     }
+    if (role === "admin") {
+      navigate("/admin/stats", { replace: true });
+      return;
+    }
     navigate("/student/allergies", { replace: true });
   };
 

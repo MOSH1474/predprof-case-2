@@ -154,6 +154,45 @@ a {
   border-color: #c7d2fe;
 }
 
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 1.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #e1e4ea;
+}
+
+.admin-tab {
+  padding: 0.55rem 1rem;
+  border-radius: 0.6rem 0.6rem 0 0;
+  border: 1px solid #e1e4ea;
+  border-bottom-color: transparent;
+  background: #f8fafc;
+  font-weight: 600;
+  color: #1f2937;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-tab:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  border-bottom-color: transparent;
+}
+
+.admin-tab.active {
+  background: #ffffff;
+  border-color: #c7d2fe;
+  border-bottom-color: transparent;
+  color: #1d4ed8;
+  box-shadow: inset 0 -3px 0 #1d4ed8;
+}
+
+.admin-tab.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .page-description {
   margin: 0.5rem 0 1.5rem;
   color: #4b5563;
