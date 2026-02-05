@@ -65,7 +65,7 @@ async def list_purchase_requests_endpoint(
         "cook",
         "admin",
         notes="Детали заявки на закупку.",
-        extra_responses={404: error_response("Purchase request not found", "Not found")},
+        extra_responses={404: error_response("Заявка на закупку не найдена", "Not found")},
     ),
     summary="Заявка по id",
 )
@@ -76,7 +76,7 @@ async def get_purchase_request_endpoint(
 ) -> PurchaseRequestPublic:
     purchase_request = await get_purchase_request(request_id, db)
     if current_user.role != UserRole.ADMIN and purchase_request.requested_by_id != current_user.id:
-        raise_http_403("Insufficient permissions")
+        raise_http_403("Недостаточно прав")
     return PurchaseRequestPublic.model_validate(purchase_request)
 
 
@@ -92,7 +92,7 @@ async def get_purchase_request_endpoint(
             "Продукты должны быть активными."
         ),
         extra_responses={
-            400: error_response("Products not found: [1]", "Bad request"),
+            400: error_response("Продукты не найдены: [1]", "Bad request"),
         },
     ),
     summary="Создать заявку на закупку",
@@ -116,8 +116,8 @@ async def create_purchase_request_endpoint(
             "Повторное решение для уже обработанной заявки запрещено."
         ),
         extra_responses={
-            400: error_response("Purchase request already decided", "Bad request"),
-            404: error_response("Purchase request not found", "Not found"),
+            400: error_response("Заявка уже рассмотрена", "Bad request"),
+            404: error_response("Заявка на закупку не найдена", "Not found"),
         },
     ),
     summary="Решение по заявке",

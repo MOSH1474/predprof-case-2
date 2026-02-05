@@ -19,14 +19,14 @@ from ..services.authorization import require_roles
 router = APIRouter(
     prefix="/allergies",
     tags=["allergies"],
-    dependencies=[Depends(require_roles(UserRole.STUDENT, UserRole.ADMIN))],
+    dependencies=[Depends(require_roles(UserRole.STUDENT, UserRole.COOK, UserRole.ADMIN))],
 )
 
 
 @router.get(
     "/",
     response_model=AllergyListResponse,
-    **roles_docs("student", "admin", notes="Справочник аллергенов."),
+    **roles_docs("student", "cook", "admin", notes="Справочник аллергенов."),
     summary="Список аллергенов",
 )
 async def list_allergies_endpoint(db: AsyncSession = Depends(get_db)) -> AllergyListResponse:
@@ -41,10 +41,11 @@ async def list_allergies_endpoint(db: AsyncSession = Depends(get_db)) -> Allergy
     response_model=AllergyPublic,
     **roles_docs(
         "student",
+        "cook",
         "admin",
         notes="Возвращает аллерген по идентификатору.",
         extra_responses={
-            404: error_response("Allergy not found", "Not found"),
+            404: error_response("Аллерген не найден", "Not found"),
         },
     ),
     summary="Аллерген по id",
@@ -61,10 +62,11 @@ async def get_allergy_endpoint(
     response_model=AllergyPublic,
     status_code=status.HTTP_201_CREATED,
     **roles_docs(
+        "cook",
         "admin",
         notes="Создает новый аллерген в справочнике.",
         extra_responses={
-            400: error_response("Allergy already exists", "Bad request"),
+            400: error_response("Аллерген уже существует", "Bad request"),
         },
     ),
     summary="Создать аллерген",
@@ -72,7 +74,7 @@ async def get_allergy_endpoint(
 async def create_allergy_endpoint(
     payload: AllergyCreate,
     db: AsyncSession = Depends(get_db),
-    _: object = Depends(require_roles(UserRole.ADMIN)),
+    _: object = Depends(require_roles(UserRole.COOK, UserRole.ADMIN)),
 ) -> AllergyPublic:
     allergy = await create_allergy(payload, db)
     return AllergyPublic.model_validate(allergy)
@@ -82,11 +84,12 @@ async def create_allergy_endpoint(
     "/{allergy_id}",
     response_model=AllergyPublic,
     **roles_docs(
+        "cook",
         "admin",
         notes="Обновляет аллерген по идентификатору.",
         extra_responses={
-            400: error_response("Allergy already exists", "Bad request"),
-            404: error_response("Allergy not found", "Not found"),
+            400: error_response("Аллерген уже существует", "Bad request"),
+            404: error_response("Аллерген не найден", "Not found"),
         },
     ),
     summary="Обновить аллерген",
@@ -95,7 +98,7 @@ async def update_allergy_endpoint(
     allergy_id: int,
     payload: AllergyUpdate,
     db: AsyncSession = Depends(get_db),
-    _: object = Depends(require_roles(UserRole.ADMIN)),
+    _: object = Depends(require_roles(UserRole.COOK, UserRole.ADMIN)),
 ) -> AllergyPublic:
     allergy = await get_allergy(allergy_id, db)
     allergy = await update_allergy(allergy, payload, db)
@@ -106,10 +109,11 @@ async def update_allergy_endpoint(
     "/{allergy_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     **roles_docs(
+        "cook",
         "admin",
         notes="Удаляет аллерген по идентификатору.",
         extra_responses={
-            404: error_response("Allergy not found", "Not found"),
+            404: error_response("Аллерген не найден", "Not found"),
         },
     ),
     summary="Удалить аллерген",
@@ -117,7 +121,7 @@ async def update_allergy_endpoint(
 async def delete_allergy_endpoint(
     allergy_id: int,
     db: AsyncSession = Depends(get_db),
-    _: object = Depends(require_roles(UserRole.ADMIN)),
+    _: object = Depends(require_roles(UserRole.COOK, UserRole.ADMIN)),
 ) -> None:
     allergy = await get_allergy(allergy_id, db)
     await delete_allergy(allergy, db)

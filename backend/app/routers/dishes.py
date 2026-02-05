@@ -45,7 +45,7 @@ async def list_dishes_endpoint(
         "cook",
         "admin",
         notes="Возвращает блюдо по идентификатору.",
-        extra_responses={404: error_response("Dish not found", "Not found")},
+        extra_responses={404: error_response("Блюдо не найдено", "Not found")},
     ),
     summary="Блюдо по id",
 )
@@ -62,7 +62,7 @@ async def get_dish_endpoint(dish_id: int, db: AsyncSession = Depends(get_db)) ->
         "cook",
         "admin",
         notes="Создает блюдо и связывает с аллергенами при необходимости.",
-        extra_responses={400: error_response("Dish already exists", "Bad request")},
+        extra_responses={400: error_response("Блюдо уже существует", "Bad request")},
     ),
     summary="Создать блюдо",
 )
@@ -83,8 +83,8 @@ async def create_dish_endpoint(
         "admin",
         notes="Обновляет данные блюда и список аллергенов.",
         extra_responses={
-            400: error_response("Dish already exists", "Bad request"),
-            404: error_response("Dish not found", "Not found"),
+            400: error_response("Блюдо уже существует", "Bad request"),
+            404: error_response("Блюдо не найдено", "Not found"),
         },
     ),
     summary="Обновить блюдо",
@@ -107,7 +107,7 @@ async def update_dish_endpoint(
         "cook",
         "admin",
         notes="Удаляет блюдо по идентификатору.",
-        extra_responses={404: error_response("Dish not found", "Not found")},
+        extra_responses={404: error_response("Блюдо не найдено", "Not found")},
     ),
     summary="Удалить блюдо",
 )

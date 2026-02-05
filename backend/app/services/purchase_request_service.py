@@ -38,11 +38,11 @@ async def _resolve_products(
     found_ids = {product.id for product in products}
     missing_ids = sorted(set(product_ids) - found_ids)
     if missing_ids:
-        raise_http_400(f"Products not found: {missing_ids}")
+        raise_http_400(f"Продукты не найдены: {missing_ids}")
 
     inactive_ids = sorted(product.id for product in products if not product.is_active)
     if inactive_ids:
-        raise_http_400(f"Products inactive: {inactive_ids}")
+        raise_http_400(f"Продукты неактивны: {inactive_ids}")
 
     return {product.id: product for product in products}
 
@@ -85,7 +85,7 @@ async def get_purchase_request(request_id: int, db: AsyncSession) -> PurchaseReq
     result = await db.execute(stmt)
     purchase_request = result.scalar_one_or_none()
     if not purchase_request:
-        raise_http_404("Purchase request not found")
+        raise_http_404("Заявка на закупку не найдена")
     return purchase_request
 
 
@@ -115,9 +115,9 @@ async def decide_purchase_request(
     db: AsyncSession,
 ) -> PurchaseRequest:
     if status not in (PurchaseRequestStatus.APPROVED, PurchaseRequestStatus.REJECTED):
-        raise_http_400("Decision must be approved or rejected")
+        raise_http_400("Решение должно быть «approved» или «rejected»")
     if purchase_request.status != PurchaseRequestStatus.PENDING:
-        raise_http_400("Purchase request already decided")
+        raise_http_400("Заявка уже рассмотрена")
 
     purchase_request.status = status
     purchase_request.approved_by_id = decided_by_id

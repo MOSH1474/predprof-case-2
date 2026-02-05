@@ -15,7 +15,7 @@ class DishBase(BaseModel):
     def _normalize_name(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("name cannot be empty")
+            raise ValueError("Название не может быть пустым")
         return trimmed
 
     @field_validator("description")
@@ -36,9 +36,9 @@ class DishCreate(DishBase):
         if value is None:
             return value
         if any(item <= 0 for item in value):
-            raise ValueError("allergy_ids must be positive integers")
+            raise ValueError("allergy_ids должны быть положительными числами")
         if len(set(value)) != len(value):
-            raise ValueError("allergy_ids must be unique")
+            raise ValueError("allergy_ids должны быть уникальными")
         return value
 
 
@@ -55,7 +55,7 @@ class DishUpdate(BaseModel):
             return None
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("name cannot be empty")
+            raise ValueError("Название не может быть пустым")
         return trimmed
 
     @field_validator("description")
@@ -72,9 +72,9 @@ class DishUpdate(BaseModel):
         if value is None:
             return value
         if any(item <= 0 for item in value):
-            raise ValueError("allergy_ids must be positive integers")
+            raise ValueError("allergy_ids должны быть положительными числами")
         if len(set(value)) != len(value):
-            raise ValueError("allergy_ids must be unique")
+            raise ValueError("allergy_ids должны быть уникальными")
         return value
 
 

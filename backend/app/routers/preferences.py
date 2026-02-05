@@ -16,7 +16,6 @@ from ..services.preferences_service import (
 router = APIRouter(
     prefix="/preferences",
     tags=["preferences"],
-    dependencies=[Depends(require_roles(UserRole.STUDENT, UserRole.ADMIN))],
 )
 
 
@@ -29,6 +28,7 @@ router = APIRouter(
 async def get_preferences(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_user),
+    _: object = Depends(require_roles(UserRole.STUDENT, UserRole.ADMIN)),
 ) -> PreferencesResponse:
     return await service_get_preferences(current_user.id, db)
 
@@ -41,7 +41,7 @@ async def get_preferences(
         "admin",
         notes="Обновляет предпочтения питания и список аллергенов.",
         extra_responses={
-            400: error_response("Allergies not found: [1]", "Bad request"),
+            400: error_response("Аллергены не найдены: [1]", "Bad request"),
         },
     ),
     summary="Обновить предпочтения",
@@ -50,5 +50,20 @@ async def update_preferences(
     payload: PreferencesUpdateRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_user),
+    _: object = Depends(require_roles(UserRole.STUDENT, UserRole.ADMIN)),
 ) -> PreferencesResponse:
     return await service_update_preferences(current_user.id, payload, db)
+
+
+@router.get(
+    "/user/{user_id}",
+    response_model=PreferencesResponse,
+    **roles_docs("cook", "admin", notes="Предпочтения и аллергены ученика."),
+    summary="Предпочтения ученика",
+)
+async def get_user_preferences(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: object = Depends(require_roles(UserRole.COOK, UserRole.ADMIN)),
+) -> PreferencesResponse:
+    return await service_get_preferences(user_id, db)

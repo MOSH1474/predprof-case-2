@@ -25,7 +25,7 @@ async def _resolve_allergies(allergy_ids: list[int], db: AsyncSession) -> list[A
     found_ids = {item.id for item in allergies}
     missing_ids = sorted(set(allergy_ids) - found_ids)
     if missing_ids:
-        raise_http_400(f"Allergies not found: {missing_ids}")
+        raise_http_400(f"Аллергены не найдены: {missing_ids}")
     return allergies
 
 

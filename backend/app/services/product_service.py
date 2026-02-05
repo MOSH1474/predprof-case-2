@@ -20,7 +20,7 @@ def _normalize_optional_text(value: str | None) -> str | None:
 def _normalize_required_text(value: str, label: str) -> str:
     trimmed = value.strip()
     if not trimmed:
-        raise_http_400(f"{label} cannot be empty")
+        raise_http_400(f"{label} не может быть пустым")
     return trimmed
 
 
@@ -40,18 +40,18 @@ async def get_product(product_id: int, db: AsyncSession) -> Product:
     result = await db.execute(select(Product).where(Product.id == product_id))
     product = result.scalar_one_or_none()
     if not product:
-        raise_http_404("Product not found")
+        raise_http_404("Продукт не найден")
     return product
 
 
 async def create_product(payload: ProductCreate, db: AsyncSession) -> Product:
-    name = _normalize_required_text(payload.name, "Product name")
-    unit = _normalize_required_text(payload.unit, "Unit")
+    name = _normalize_required_text(payload.name, "Название продукта")
+    unit = _normalize_required_text(payload.unit, "Единица измерения")
     category = _normalize_optional_text(payload.category)
 
     result = await db.execute(select(Product).where(Product.name == name))
     if result.scalar_one_or_none():
-        raise_http_400("Product already exists")
+        raise_http_400("Продукт уже существует")
 
     product = Product(
         name=name,
@@ -67,15 +67,15 @@ async def create_product(payload: ProductCreate, db: AsyncSession) -> Product:
 
 async def update_product(product: Product, payload: ProductUpdate, db: AsyncSession) -> Product:
     if "name" in payload.model_fields_set:
-        name = _normalize_required_text(payload.name or "", "Product name")
+        name = _normalize_required_text(payload.name or "", "Название продукта")
         if name != product.name:
             result = await db.execute(select(Product).where(Product.name == name))
             if result.scalar_one_or_none():
-                raise_http_400("Product already exists")
+                raise_http_400("Продукт уже существует")
             product.name = name
 
     if "unit" in payload.model_fields_set:
-        product.unit = _normalize_required_text(payload.unit or "", "Unit")
+        product.unit = _normalize_required_text(payload.unit or "", "Единица измерения")
 
     if "category" in payload.model_fields_set:
         product.category = _normalize_optional_text(payload.category)

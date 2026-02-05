@@ -81,7 +81,7 @@ async def list_products_stock_endpoint(
         "cook",
         "admin",
         notes="Возвращает продукт по идентификатору.",
-        extra_responses={404: error_response("Product not found", "Not found")},
+        extra_responses={404: error_response("Продукт не найден", "Not found")},
     ),
     summary="Продукт по id",
 )
@@ -100,7 +100,7 @@ async def get_product_endpoint(
         "cook",
         "admin",
         notes="Создает продукт в каталоге.",
-        extra_responses={400: error_response("Product already exists", "Bad request")},
+        extra_responses={400: error_response("Продукт уже существует", "Bad request")},
     ),
     summary="Создать продукт",
 )
@@ -121,8 +121,8 @@ async def create_product_endpoint(
         "admin",
         notes="Обновляет продукт и его свойства.",
         extra_responses={
-            400: error_response("Product already exists", "Bad request"),
-            404: error_response("Product not found", "Not found"),
+            400: error_response("Продукт уже существует", "Bad request"),
+            404: error_response("Продукт не найден", "Not found"),
         },
     ),
     summary="Обновить продукт",
@@ -145,7 +145,7 @@ async def update_product_endpoint(
         "cook",
         "admin",
         notes="Удаляет продукт по идентификатору.",
-        extra_responses={404: error_response("Product not found", "Not found")},
+        extra_responses={404: error_response("Продукт не найден", "Not found")},
     ),
     summary="Удалить продукт",
 )

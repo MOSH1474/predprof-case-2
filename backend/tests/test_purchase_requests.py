@@ -119,7 +119,7 @@ async def test_admin_can_approve_purchase_request(client, db_session):
         json={"status": "rejected"},
     )
     assert repeat_response.status_code == 400
-    assert repeat_response.json()["detail"] == "Purchase request already decided"
+    assert repeat_response.json()["detail"] == "Заявка уже рассмотрена"
 
 
 @pytest.mark.anyio

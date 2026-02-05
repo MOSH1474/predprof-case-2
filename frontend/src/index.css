@@ -174,6 +174,81 @@ a {
   z-index: 5;
 }
 
+.cook-dashboard {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.cook-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #dbeafe;
+  background: linear-gradient(135deg, #eff6ff, #f8fafc);
+}
+
+.cook-hero h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.25rem;
+}
+
+.cook-hero p {
+  margin: 0;
+  color: #475569;
+  max-width: 520px;
+}
+
+.cook-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: 0.85rem;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  border-color: #c7d2fe;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+}
+
+.dashboard-eyebrow {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #64748b;
+}
+
+.dashboard-card strong {
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.dashboard-card p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.92rem;
+}
+
 .cook-nav a {
   padding: 0.45rem 0.9rem;
   border-radius: 999px;
@@ -304,6 +379,107 @@ a {
   width: 100%;
 }
 
+.data-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.data-card {
+  border: 1px solid #d1d5db;
+  border-radius: 0.7rem;
+  padding: 0.9rem 1rem;
+  background: #f9fafb;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.data-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.data-list {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.data-list-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+
+.status-issued {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.status-served {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #93c5fd;
+}
+
+.status-confirmed {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.status-approved {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.status-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.status-success {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.status-danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.status-neutral {
+  background: #e2e8f0;
+  color: #1f2937;
+  border-color: #cbd5f5;
+}
+
 .stock-scroll {
   display: flex;
   flex-wrap: nowrap;
@@ -356,6 +532,27 @@ a {
   min-width: 0;
 }
 
+.form-field input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  border-radius: 0.3rem;
+  align-self: flex-start;
+}
+
+.compact-input {
+  width: 90px;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  font-weight: 600;
+  text-align: right;
+}
+
+.compact-input:focus {
+  outline: 2px solid #93c5fd;
+  border-color: #60a5fa;
+}
+
 .form-field select {
   padding: 0.65rem 0.75rem;
   border-radius: 0.6rem;
@@ -389,6 +586,31 @@ a {
   color: #4b5563;
 }
 
+.subscription-banner {
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  font-weight: 600;
+}
+
+.subscription-active {
+  background: #ecfeff;
+  border-color: #22d3ee;
+  color: #0e7490;
+}
+
+.subscription-upcoming {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.subscription-inactive {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
 .form-error {
   padding: 0.75rem 0.9rem;
   border-radius: 0.6rem;
@@ -404,6 +626,15 @@ a {
   background: #dcfce7;
   border: 1px solid #86efac;
   color: #166534;
+  font-weight: 600;
+}
+
+.form-warning {
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.6rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  color: #92400e;
   font-weight: 600;
 }
 
@@ -443,6 +674,13 @@ a {
 
 .danger-button:hover {
   background: #fecaca;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.danger-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .button-row {
@@ -517,12 +755,77 @@ a {
   flex-wrap: wrap;
 }
 
+.menu-item-alert {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  box-shadow: inset 0 0 0 1px #fcd34d;
+}
+
+.allergy-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.28rem 0.7rem;
+  min-height: 1.5rem;
+  border-radius: 999px;
+  border: 1px solid #f59e0b;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.allergy-hint {
+  color: #92400e;
+  font-weight: 600;
+}
+
 .menu-meta {
   display: flex;
   gap: 0.75rem;
   color: #6b7280;
   font-size: 0.9rem;
   flex-wrap: wrap;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 50;
+}
+
+.modal-card {
+  background: #ffffff;
+  border-radius: 0.85rem;
+  border: 1px solid #e1e4ea;
+  padding: 1.5rem;
+  width: min(720px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-header h3 {
+  margin: 0 0 0.25rem;
+}
+
+.modal-close {
+  white-space: nowrap;
 }
 
 @media (max-width: 900px) {
@@ -549,5 +852,14 @@ a {
 
   .app-main {
     padding: 1.5rem;
+  }
+
+  .modal-card {
+    padding: 1.25rem;
+  }
+
+  .cook-hero {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

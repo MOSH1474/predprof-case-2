@@ -114,7 +114,7 @@ async def test_inventory_transaction_rejects_overdraft(client, db_session):
         },
     )
     assert out_response.status_code == 400
-    assert out_response.json()["detail"] == "Not enough stock"
+    assert out_response.json()["detail"] == "Недостаточно остатка"
 
 
 @pytest.mark.anyio
@@ -139,7 +139,7 @@ async def test_inventory_transaction_rejects_inactive_product(client, db_session
         },
     )
     assert in_response.status_code == 400
-    assert in_response.json()["detail"] == "Product is inactive"
+    assert in_response.json()["detail"] == "Продукт неактивен"
 
 
 @pytest.mark.anyio

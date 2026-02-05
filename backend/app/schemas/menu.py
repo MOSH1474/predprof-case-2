@@ -8,6 +8,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from ..models import MealType
 from .dish import DishPublic
 
+MAX_MENU_PRICE = Decimal("99999999.99")
+
 
 class MenuItemCreate(BaseModel):
     dish_id: int = Field(gt=0)
@@ -22,7 +24,7 @@ class MenuItemCreate(BaseModel):
             and self.planned_qty is not None
             and self.remaining_qty > self.planned_qty
         ):
-            raise ValueError("remaining_qty cannot exceed planned_qty")
+            raise ValueError("remaining_qty не может превышать planned_qty")
         return self
 
 
@@ -32,6 +34,15 @@ class MenuCreate(BaseModel):
     title: str | None = Field(default=None, max_length=255)
     price: Decimal | None = Field(default=None, ge=0)
     items: list[MenuItemCreate] = Field(min_length=1)
+
+    @field_validator("price")
+    @classmethod
+    def _validate_price(cls, value: Decimal | None) -> Decimal | None:
+        if value is None:
+            return None
+        if value > MAX_MENU_PRICE:
+            raise ValueError("Цена не может превышать 99 999 999.99")
+        return value
 
     @field_validator("title")
     @classmethod
@@ -46,7 +57,7 @@ class MenuCreate(BaseModel):
     def _unique_items(cls, value: list[MenuItemCreate]) -> list[MenuItemCreate]:
         dish_ids = [item.dish_id for item in value]
         if len(set(dish_ids)) != len(dish_ids):
-            raise ValueError("items must have unique dish_id")
+            raise ValueError("items должны иметь уникальные dish_id")
         return value
 
 
@@ -56,6 +67,15 @@ class MenuUpdate(BaseModel):
     title: str | None = Field(default=None, max_length=255)
     price: Decimal | None = Field(default=None, ge=0)
     items: list[MenuItemCreate] | None = None
+
+    @field_validator("price")
+    @classmethod
+    def _validate_price(cls, value: Decimal | None) -> Decimal | None:
+        if value is None:
+            return None
+        if value > MAX_MENU_PRICE:
+            raise ValueError("Цена не может превышать 99 999 999.99")
+        return value
 
     @field_validator("title")
     @classmethod
@@ -72,7 +92,7 @@ class MenuUpdate(BaseModel):
             return value
         dish_ids = [item.dish_id for item in value]
         if len(set(dish_ids)) != len(dish_ids):
-            raise ValueError("items must have unique dish_id")
+            raise ValueError("items должны иметь уникальные dish_id")
         return value
 
 

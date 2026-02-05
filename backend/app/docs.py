@@ -25,10 +25,10 @@ def error_response(detail: str, description: str) -> dict[str, Any]:
 
 def auth_error_responses(roles_required: bool) -> dict[int, dict[str, Any]]:
     responses: dict[int, dict[str, Any]] = {
-        401: error_response("Not authenticated", "Не авторизован"),
+        401: error_response("Не авторизован", "Не авторизован"),
     }
     if roles_required:
-        responses[403] = error_response("Insufficient permissions", "Недостаточно прав")
+        responses[403] = error_response("Недостаточно прав", "Недостаточно прав")
     return responses
 
 

@@ -19,7 +19,7 @@ def _normalize_optional_text(value: str | None) -> str | None:
 def _normalize_required_text(value: str, label: str) -> str:
     trimmed = value.strip()
     if not trimmed:
-        raise_http_400(f"{label} cannot be empty")
+        raise_http_400(f"{label} не может быть пустым")
     return trimmed
 
 
@@ -31,7 +31,7 @@ async def _resolve_allergies(allergy_ids: list[int], db: AsyncSession) -> list[A
     found_ids = {item.id for item in allergies}
     missing_ids = sorted(set(allergy_ids) - found_ids)
     if missing_ids:
-        raise_http_400(f"Allergies not found: {missing_ids}")
+        raise_http_400(f"Аллергены не найдены: {missing_ids}")
     return allergies
 
 
@@ -52,15 +52,15 @@ async def get_dish(dish_id: int, db: AsyncSession) -> Dish:
     result = await db.execute(stmt)
     dish = result.scalar_one_or_none()
     if not dish:
-        raise_http_404("Dish not found")
+        raise_http_404("Блюдо не найдено")
     return dish
 
 
 async def create_dish(payload: DishCreate, db: AsyncSession) -> Dish:
-    name = _normalize_required_text(payload.name, "Dish name")
+    name = _normalize_required_text(payload.name, "Название блюда")
     result = await db.execute(select(Dish).where(Dish.name == name))
     if result.scalar_one_or_none():
-        raise_http_400("Dish already exists")
+        raise_http_400("Блюдо уже существует")
 
     dish = Dish(
         name=name,
@@ -77,11 +77,11 @@ async def create_dish(payload: DishCreate, db: AsyncSession) -> Dish:
 
 async def update_dish(dish: Dish, payload: DishUpdate, db: AsyncSession) -> Dish:
     if "name" in payload.model_fields_set:
-        name = _normalize_required_text(payload.name or "", "Dish name")
+        name = _normalize_required_text(payload.name or "", "Название блюда")
         if name != dish.name:
             result = await db.execute(select(Dish).where(Dish.name == name))
             if result.scalar_one_or_none():
-                raise_http_400("Dish already exists")
+                raise_http_400("Блюдо уже существует")
             dish.name = name
 
     if "description" in payload.model_fields_set:

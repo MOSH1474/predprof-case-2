@@ -14,6 +14,9 @@ export default function AdminNav() {
       <NavLink to="/admin/reports" className={navClass}>
         Отчеты
       </NavLink>
+      <NavLink to="/admin/allergies" className={navClass}>
+        Аллергены
+      </NavLink>
     </nav>
   );
 }

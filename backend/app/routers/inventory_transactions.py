@@ -59,8 +59,8 @@ async def list_inventory_transactions_endpoint(
             "При расходе проверяется наличие остатка."
         ),
         extra_responses={
-            400: error_response("Not enough stock", "Bad request"),
-            404: error_response("Product not found", "Not found"),
+            400: error_response("Недостаточно остатка", "Bad request"),
+            404: error_response("Продукт не найден", "Not found"),
         },
     ),
     summary="Создать движение склада",

@@ -18,7 +18,7 @@ class RegisterRequest(BaseModel):
     def _normalize_full_name(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("full_name cannot be empty")
+            raise ValueError("ФИО не может быть пустым")
         return trimmed
 
     @field_validator("dietary_preferences")
@@ -33,7 +33,7 @@ class RegisterRequest(BaseModel):
     @classmethod
     def _password_bytes(cls, value: str) -> str:
         if len(value.encode("utf-8")) > 72:
-            raise ValueError("Password must be at most 72 bytes")
+            raise ValueError("Пароль должен быть не длиннее 72 байт")
         return value
 
 
@@ -44,7 +44,7 @@ class LoginRequest(BaseModel):
     @classmethod
     def _password_bytes(cls, value: str) -> str:
         if len(value.encode("utf-8")) > 72:
-            raise ValueError("Password must be at most 72 bytes")
+            raise ValueError("Пароль должен быть не длиннее 72 байт")
         return value
 
 

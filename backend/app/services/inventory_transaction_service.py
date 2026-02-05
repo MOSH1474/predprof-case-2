@@ -16,7 +16,7 @@ async def _get_product(product_id: int, db: AsyncSession) -> Product:
     result = await db.execute(select(Product).where(Product.id == product_id))
     product = result.scalar_one_or_none()
     if not product:
-        raise_http_404("Product not found")
+        raise_http_404("Продукт не найден")
     return product
 
 
@@ -49,12 +49,12 @@ async def create_inventory_transaction(
 ) -> InventoryTransaction:
     product = await _get_product(payload.product_id, db)
     if not product.is_active:
-        raise_http_400("Product is inactive")
+        raise_http_400("Продукт неактивен")
 
     if payload.direction == InventoryDirection.OUT:
         stock: Decimal = await get_product_stock(product.id, db)
         if stock < payload.quantity:
-            raise_http_400("Not enough stock")
+            raise_http_400("Недостаточно остатка")
 
     transaction = InventoryTransaction(
         product_id=product.id,

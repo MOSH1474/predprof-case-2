@@ -34,7 +34,7 @@ class PurchaseRequestCreate(BaseModel):
     ) -> list[PurchaseRequestItemCreate]:
         product_ids = [item.product_id for item in value]
         if len(set(product_ids)) != len(product_ids):
-            raise ValueError("items must have unique product_id")
+            raise ValueError("items должны иметь уникальные product_id")
         return value
 
 
@@ -44,7 +44,7 @@ class PurchaseRequestDecision(BaseModel):
     @model_validator(mode="after")
     def _validate_status(self) -> "PurchaseRequestDecision":
         if self.status == PurchaseRequestStatus.PENDING:
-            raise ValueError("status must be approved or rejected")
+            raise ValueError("status должен быть approved или rejected")
         return self
 
 
