@@ -147,7 +147,9 @@ export default function StudentMenu() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [mealConfirmError, setMealConfirmError] = useState("");
+  const [mealConfirmSuccess, setMealConfirmSuccess] = useState("");
+  const [confirmingMenuId, setConfirmingMenuId] = useState(null);
 
   const [activeMenu, setActiveMenu] = useState(null);
   const [menuCard, setMenuCard] = useState(buildCard);
@@ -460,14 +462,58 @@ export default function StudentMenu() {
     }
   };
 
-  const handleMealReceive = (menu) => {
-    const label = MEAL_TYPE_LABELS[menu.meal_type] || menu.meal_type;
-    setNotice(`Отметка получения (${label}) пока в разработке.`);
+  const handleMealReceive = async (menu) => {
+    if (!menu) {
+      return;
+    }
+    const issue = issueMap.get(menu.id);
+    if (!issue || issue.status !== "served") {
+      setMealConfirmError(
+        "Подтверждение возможно после отметки повара о выдаче."
+      );
+      return;
+    }
+
+    setConfirmingMenuId(menu.id);
+    setMealConfirmError("");
+    setMealConfirmSuccess("");
+    try {
+      await apiRequest("/meal-issues/me", {
+        method: "POST",
+        token,
+        body: {
+          menu_id: menu.id,
+        },
+      });
+      const label = MEAL_TYPE_LABELS[menu.meal_type] || menu.meal_type;
+      setMealConfirmSuccess(
+        `Получение ${label} от ${formatDate(menu.menu_date)} подтверждено.`
+      );
+      await refreshPaymentsAndIssues();
+    } catch (err) {
+      setMealConfirmError(err.message);
+    } finally {
+      setConfirmingMenuId(null);
+    }
   };
 
   const renderMenuCard = (menu, { showPay }) => {
     const issue = issueMap.get(menu.id);
     const coveredBySubscription = isMenuCoveredBySubscription(menu);
+    const canConfirm = issue?.status === "served";
+    const actionLabel = confirmingMenuId === menu.id
+      ? "Подтверждаем..."
+      : canConfirm
+      ? "Подтвердить получение"
+      : "Ожидает выдачи";
+    const actionHint =
+      !showPay && !canConfirm
+        ? !issue
+          ? "Подтверждение станет доступно после отметки повара."
+          : issue.status === "issued"
+          ? "Повар еще не отметил выдачу."
+          : ""
+        : "";
     const statusLabel = issue
       ? MEAL_ISSUE_STATUS_LABELS[issue.status] || issue.status
       : coveredBySubscription
@@ -531,13 +577,15 @@ export default function StudentMenu() {
           {!showPay && (
             <button
               type="button"
-              className="secondary-button"
+              className={canConfirm ? "primary-button" : "secondary-button"}
               onClick={() => handleMealReceive(menu)}
+              disabled={!canConfirm || confirmingMenuId === menu.id}
             >
-              Получить прием пищи
+              {actionLabel}
             </button>
           )}
         </div>
+        {!showPay && actionHint && <div className="form-hint">{actionHint}</div>}
       </article>
     );
   };
@@ -597,7 +645,16 @@ export default function StudentMenu() {
         </div>
       )}
 
-      {notice && <div className="form-hint">{notice}</div>}
+      {mealConfirmSuccess && (
+        <div className="form-success" style={{ marginTop: "1rem" }}>
+          {mealConfirmSuccess}
+        </div>
+      )}
+      {mealConfirmError && (
+        <div className="form-error" role="alert" style={{ marginTop: "1rem" }}>
+          {mealConfirmError}
+        </div>
+      )}
 
       <div className="form-group" style={{ marginTop: "1.5rem" }}>
         <h3>Доступные меню</h3>

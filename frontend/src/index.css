@@ -445,6 +445,13 @@ a {
   background: #fecaca;
 }
 
+.primary-button:disabled,
+.secondary-button:disabled,
+.danger-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .button-row {
   display: flex;
   gap: 0.75rem;
