@@ -106,6 +106,40 @@ async def test_meal_issue_flow_with_cook_and_student(client, db_session):
 
 
 @pytest.mark.anyio
+async def test_student_can_issue_menu_covered_by_subscription(client, db_session):
+    cook, cook_token = await _create_user(db_session, UserRole.COOK)
+    _, student_token = await _create_user(db_session, UserRole.STUDENT)
+
+    period_start = date(2025, 2, 10)
+    period_end = date(2025, 2, 12)
+
+    subscription_response = await client.post(
+        "/payments/subscription",
+        headers=_auth_headers(student_token),
+        json={"period_start": period_start.isoformat(), "period_end": period_end.isoformat()},
+    )
+    assert subscription_response.status_code == 201
+
+    menu_id = await _create_menu(client, cook_token, date(2025, 2, 11), remaining_qty=1)
+
+    issue_response = await client.post(
+        "/meal-issues/me/issue",
+        headers=_auth_headers(student_token),
+        json={"menu_id": menu_id},
+    )
+    assert issue_response.status_code == 201
+    assert issue_response.json()["status"] == "issued"
+
+    repeat_response = await client.post(
+        "/meal-issues/me/issue",
+        headers=_auth_headers(student_token),
+        json={"menu_id": menu_id},
+    )
+    assert repeat_response.status_code == 400
+    assert repeat_response.json()["detail"] == "Выдача уже создана"
+
+
+@pytest.mark.anyio
 async def test_meal_issue_fails_when_no_remaining_qty(client, db_session):
     _, cook_token = await _create_user(db_session, UserRole.COOK)
     student, student_token = await _create_user(db_session, UserRole.STUDENT)
@@ -118,7 +152,7 @@ async def test_meal_issue_fails_when_no_remaining_qty(client, db_session):
         json={"menu_id": menu_id},
     )
     assert payment_response.status_code == 400
-    assert payment_response.json()["detail"] == "Not enough menu items to issue meal"
+    assert payment_response.json()["detail"] == "Недостаточно блюд в меню для выдачи"
 
 
 @pytest.mark.anyio
@@ -134,7 +168,7 @@ async def test_meal_issue_fails_without_payment(client, db_session):
         json={"user_id": student.id, "menu_id": menu_id},
     )
     assert issue_response.status_code == 400
-    assert issue_response.json()["detail"] == "Meal is not paid"
+    assert issue_response.json()["detail"] == "Питание не оплачено"
 
 
 @pytest.mark.anyio
@@ -150,7 +184,7 @@ async def test_student_cannot_confirm_without_issue(client, db_session):
         json={"menu_id": menu_id},
     )
     assert response.status_code == 400
-    assert response.json()["detail"] == "Meal not issued yet"
+    assert response.json()["detail"] == "Выдача ещё не создана"
 
 
 @pytest.mark.anyio
@@ -173,4 +207,4 @@ async def test_student_cannot_confirm_before_served(client, db_session):
         json={"menu_id": menu_id},
     )
     assert response.status_code == 400
-    assert response.json()["detail"] == "Meal not served yet"
+    assert response.json()["detail"] == "Питание ещё не выдано"

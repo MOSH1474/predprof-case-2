@@ -19,7 +19,7 @@ class PaymentCreateSubscription(BaseModel):
     @model_validator(mode="after")
     def _validate_period(self) -> "PaymentCreateSubscription":
         if self.period_end < self.period_start:
-            raise ValueError("period_end must be on or after period_start")
+            raise ValueError("period_end должен быть не раньше period_start")
         return self
 
 

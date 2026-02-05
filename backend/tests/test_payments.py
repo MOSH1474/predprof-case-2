@@ -144,7 +144,7 @@ async def test_subscription_overlap_is_rejected(client, db_session):
         },
     )
     assert overlap_response.status_code == 400
-    assert overlap_response.json()["detail"] == "Subscription overlaps existing subscription"
+    assert overlap_response.json()["detail"] == "Абонемент пересекается с уже существующим"
 
 
 @pytest.mark.anyio

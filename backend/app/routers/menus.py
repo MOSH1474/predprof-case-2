@@ -54,7 +54,7 @@ async def list_menus_endpoint(
         "cook",
         "admin",
         notes="Возвращает меню по идентификатору.",
-        extra_responses={404: error_response("Menu not found", "Not found")},
+        extra_responses={404: error_response("Меню не найдено", "Not found")},
     ),
     summary="Меню по id",
 )
@@ -73,7 +73,7 @@ async def get_menu_endpoint(menu_id: int, db: AsyncSession = Depends(get_db)) ->
         notes="Меню уникально по комбинации `menu_date + meal_type`.",
         extra_responses={
             400: error_response(
-                "Menu for this date and meal type already exists", "Bad request"
+                "Меню на эту дату и тип приёма пищи уже существует", "Bad request"
             ),
         },
     ),
@@ -97,9 +97,9 @@ async def create_menu_endpoint(
         notes="Обновляет основную информацию и позиции меню.",
         extra_responses={
             400: error_response(
-                "Menu for this date and meal type already exists", "Bad request"
+                "Меню на эту дату и тип приёма пищи уже существует", "Bad request"
             ),
-            404: error_response("Menu not found", "Not found"),
+            404: error_response("Меню не найдено", "Not found"),
         },
     ),
     summary="Обновить меню",
@@ -122,7 +122,7 @@ async def update_menu_endpoint(
         "cook",
         "admin",
         notes="Удаляет меню по идентификатору.",
-        extra_responses={404: error_response("Menu not found", "Not found")},
+        extra_responses={404: error_response("Меню не найдено", "Not found")},
     ),
     summary="Удалить меню",
 )

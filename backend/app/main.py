@@ -15,6 +15,7 @@ from .routers import (
     products_router,
     purchase_requests_router,
     reviews_router,
+    users_router,
 )
 
 APP_DESCRIPTION = """
@@ -62,6 +63,7 @@ OPENAPI_TAGS = [
     {"name": "inventory-transactions", "description": "Движение склада и корректировки"},
     {"name": "purchase-requests", "description": "Заявки на закупку и согласование"},
     {"name": "reviews", "description": "Отзывы и оценки блюд"},
+    {"name": "users", "description": "Пользователи (для кухни/админа)"},
 ]
 
 app = FastAPI(
@@ -83,6 +85,7 @@ app.include_router(preferences_router)
 app.include_router(products_router)
 app.include_router(purchase_requests_router)
 app.include_router(reviews_router)
+app.include_router(users_router)
 
 
 @app.get(

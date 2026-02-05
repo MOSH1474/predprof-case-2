@@ -16,18 +16,18 @@ async def list_allergies(db: AsyncSession) -> list[Allergy]:
 async def get_allergy(allergy_id: int, db: AsyncSession) -> Allergy:
     allergy = await db.get(Allergy, allergy_id)
     if not allergy:
-        raise_http_404("Allergy not found")
+        raise_http_404("Аллерген не найден")
     return allergy
 
 
 async def create_allergy(payload: AllergyCreate, db: AsyncSession) -> Allergy:
     name = payload.name.strip()
     if not name:
-        raise_http_400("Allergy name cannot be empty")
+        raise_http_400("Название аллергена не может быть пустым")
 
     result = await db.execute(select(Allergy).where(Allergy.name == name))
     if result.scalar_one_or_none():
-        raise_http_400("Allergy already exists")
+        raise_http_400("Аллерген уже существует")
 
     description = payload.description.strip() if payload.description else None
     allergy = Allergy(name=name, description=description)
@@ -41,11 +41,11 @@ async def update_allergy(allergy: Allergy, payload: AllergyUpdate, db: AsyncSess
     if "name" in payload.model_fields_set:
         name = (payload.name or "").strip()
         if not name:
-            raise_http_400("Allergy name cannot be empty")
+            raise_http_400("Название аллергена не может быть пустым")
         if name != allergy.name:
             result = await db.execute(select(Allergy).where(Allergy.name == name))
             if result.scalar_one_or_none():
-                raise_http_400("Allergy already exists")
+                raise_http_400("Аллерген уже существует")
             allergy.name = name
 
     if "description" in payload.model_fields_set:

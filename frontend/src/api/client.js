@@ -27,6 +27,13 @@ const extractErrorMessage = (payload) => {
   return "Ошибка запроса";
 };
 
+const triggerUnauthorized = () => {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.dispatchEvent(new CustomEvent("auth:logout", { detail: { reason: "unauthorized" } }));
+};
+
 export async function apiRequest(path, options = {}) {
   const { method = "GET", token, body, isForm = false, headers } = options;
   const requestHeaders = new Headers(headers || {});
@@ -58,6 +65,10 @@ export async function apiRequest(path, options = {}) {
     : await response.text();
 
   if (!response.ok) {
+    if (response.status === 401 && token) {
+      triggerUnauthorized();
+      throw new Error("Сессия истекла. Войдите снова.");
+    }
     throw new Error(extractErrorMessage(data));
   }
 

@@ -55,8 +55,8 @@ async def list_my_payments_endpoint(
             "Для ученика создается запись выдачи со статусом `issued` (ожидание выдачи)."
         ),
         extra_responses={
-            400: error_response("Menu already paid", "Bad request"),
-            404: error_response("Menu not found", "Not found"),
+            400: error_response("Меню уже оплачено", "Bad request"),
+            404: error_response("Меню не найдено", "Not found"),
         },
     ),
     summary="Оплата одного меню",
@@ -88,7 +88,7 @@ async def create_one_time_payment_endpoint(
             "Для существующих меню в периоде создаются выдачи со статусом `issued`."
         ),
         extra_responses={
-            400: error_response("Subscription overlaps existing subscription", "Bad request")
+            400: error_response("Абонемент пересекается с уже существующим", "Bad request")
         },
     ),
     summary="Оплата абонемента",
@@ -111,7 +111,7 @@ async def create_subscription_payment_endpoint(
         "student",
         "admin",
         notes="Возвращает активный абонемент на текущую дату.",
-        extra_responses={404: error_response("Active subscription not found", "Not found")},
+        extra_responses={404: error_response("Активный абонемент не найден", "Not found")},
     ),
     summary="Активный абонемент",
 )
@@ -122,5 +122,5 @@ async def get_active_subscription_endpoint(
     today = utcnow().date()
     payment = await get_active_subscription(current_user.id, today, db)
     if not payment:
-        raise_http_404("Active subscription not found")
+        raise_http_404("Активный абонемент не найден")
     return PaymentPublic.model_validate(payment)

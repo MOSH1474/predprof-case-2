@@ -26,7 +26,7 @@ async def _ensure_unique_menu(
         stmt = stmt.where(Menu.id != menu_id)
     result = await db.execute(stmt)
     if result.scalar_one_or_none():
-        raise_http_400("Menu for this date and meal type already exists")
+        raise_http_400("Меню на эту дату и тип приёма пищи уже существует")
 
 
 async def _resolve_dishes(
@@ -40,7 +40,7 @@ async def _resolve_dishes(
     found_ids = {dish.id for dish in dishes}
     missing_ids = sorted(set(dish_ids) - found_ids)
     if missing_ids:
-        raise_http_400(f"Dishes not found: {missing_ids}")
+        raise_http_400(f"Блюда не найдены: {missing_ids}")
     return {dish.id: dish for dish in dishes}
 
 
@@ -87,7 +87,7 @@ async def get_menu(menu_id: int, db: AsyncSession) -> Menu:
     result = await db.execute(stmt)
     menu = result.scalar_one_or_none()
     if not menu:
-        raise_http_404("Menu not found")
+        raise_http_404("Меню не найдено")
     return menu
 
 
@@ -115,12 +115,12 @@ async def create_menu(payload: MenuCreate, db: AsyncSession) -> Menu:
 async def update_menu(menu: Menu, payload: MenuUpdate, db: AsyncSession) -> Menu:
     if "meal_type" in payload.model_fields_set:
         if payload.meal_type is None:
-            raise_http_400("Meal type cannot be empty")
+            raise_http_400("Тип приёма пищи не может быть пустым")
         menu.meal_type = payload.meal_type
 
     if "menu_date" in payload.model_fields_set:
         if payload.menu_date is None:
-            raise_http_400("Menu date cannot be empty")
+            raise_http_400("Дата меню не может быть пустой")
         menu.menu_date = payload.menu_date
 
     if "title" in payload.model_fields_set:
@@ -132,6 +132,8 @@ async def update_menu(menu: Menu, payload: MenuUpdate, db: AsyncSession) -> Menu
     if "items" in payload.model_fields_set:
         items = payload.items or []
         await _resolve_dishes(items, db)
+        menu.menu_items.clear()
+        await db.flush()
         menu.menu_items = _build_menu_items(items)
 
     await _ensure_unique_menu(menu.menu_date, menu.meal_type, db, menu_id=menu.id)

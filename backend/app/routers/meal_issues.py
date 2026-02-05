@@ -17,6 +17,7 @@ from ..schemas.meal_issue import (
 from ..services.authorization import require_roles
 from ..services.meal_issue_service import (
     confirm_meal,
+    issue_meal,
     list_meal_issues,
     list_meal_issues_for_staff,
     serve_meal,
@@ -74,6 +75,32 @@ async def list_meal_issues_for_staff_endpoint(
 
 
 @router.post(
+    "/me/issue",
+    response_model=MealIssuePublic,
+    status_code=status.HTTP_201_CREATED,
+    **roles_docs(
+        "student",
+        notes=(
+            "РЎРѕР·РґР°РµС‚ РІС‹РґР°С‡Сѓ СЃРѕ СЃС‚Р°С‚СѓСЃРѕРј `issued`, РµСЃР»Рё РјРµРЅСЋ СѓР¶Рµ РѕРїР»Р°С‡РµРЅРѕ "
+            "(СЂР°Р·РѕРІРѕ РёР»Рё Р°Р±РѕРЅРµРјРµРЅС‚РѕРј)."
+        ),
+        extra_responses={
+            400: error_response("Выдача уже создана", "Bad request"),
+            404: error_response("Меню не найдено", "Not found"),
+        },
+    ),
+    summary="РћР¶РёРґР°РЅРёРµ РІС‹РґР°С‡Рё РїРёС‚Р°РЅРёСЏ",
+)
+async def issue_my_meal(
+    payload: MealIssueCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.STUDENT)),
+) -> MealIssuePublic:
+    issue = await issue_meal(current_user.id, payload.menu_id, db)
+    return MealIssuePublic.model_validate(issue)
+
+
+@router.post(
     "/me",
     response_model=MealIssuePublic,
     **roles_docs(
@@ -84,8 +111,8 @@ async def list_meal_issues_for_staff_endpoint(
             "Подтверждение возможно только после статуса `served`."
         ),
         extra_responses={
-            400: error_response("Meal cannot be confirmed", "Bad request"),
-            404: error_response("Menu not found", "Not found"),
+            400: error_response("Питание ещё не выдано", "Bad request"),
+            404: error_response("Меню не найдено", "Not found"),
         },
     ),
     summary="Подтвердить получение питания",
@@ -111,8 +138,8 @@ async def confirm_my_meal(
             "Если выдача еще не создана (например, по абонементу), она будет создана автоматически."
         ),
         extra_responses={
-            400: error_response("Meal already served", "Bad request"),
-            404: error_response("User not found", "Not found"),
+            400: error_response("Питание уже выдано", "Bad request"),
+            404: error_response("Пользователь не найден", "Not found"),
         },
     ),
     summary="Выдать питание",

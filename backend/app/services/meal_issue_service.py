@@ -16,7 +16,7 @@ async def _get_user(user_id: int, db: AsyncSession) -> User:
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
-        raise_http_404("User not found")
+        raise_http_404("Пользователь не найден")
     return user
 
 
@@ -26,7 +26,7 @@ async def _get_menu(menu_id: int, db: AsyncSession) -> Menu:
     )
     menu = result.scalar_one_or_none()
     if not menu:
-        raise_http_404("Menu not found")
+        raise_http_404("Меню не найдено")
     return menu
 
 
@@ -45,7 +45,7 @@ def _consume_menu_items(menu: Menu) -> None:
         if item.remaining_qty is None:
             continue
         if item.remaining_qty <= 0:
-            raise_http_400("Not enough menu items to issue meal")
+            raise_http_400("Недостаточно блюд в меню для выдачи")
         item.remaining_qty -= 1
 
 
@@ -56,6 +56,26 @@ async def list_meal_issues(user_id: int, db: AsyncSession) -> list[MealIssue]:
         .order_by(MealIssue.created_at.desc())
     )
     return list(result.scalars().all())
+
+
+async def issue_meal(user_id: int, menu_id: int, db: AsyncSession) -> MealIssue:
+    menu = await _get_menu(menu_id, db)
+    issue = await _get_meal_issue(user_id, menu_id, db)
+    if issue:
+        raise_http_400("Выдача уже создана")
+    if not await is_meal_paid(user_id, menu, db):
+        raise_http_400("Питание не оплачено")
+
+    _consume_menu_items(menu)
+    issue = MealIssue(
+        user_id=user_id,
+        menu_id=menu.id,
+        status=MealIssueStatus.ISSUED,
+    )
+    db.add(issue)
+    await db.commit()
+    await db.refresh(issue)
+    return issue
 
 
 async def list_meal_issues_for_staff(
@@ -87,7 +107,7 @@ async def confirm_meal(user_id: int, menu_id: int, db: AsyncSession) -> MealIssu
     issue = await _get_meal_issue(user_id, menu_id, db)
     if issue:
         if issue.status == MealIssueStatus.CONFIRMED:
-            raise_http_400("Meal already confirmed")
+            raise_http_400("Питание уже подтверждено")
         if issue.status == MealIssueStatus.SERVED:
             issue.status = MealIssueStatus.CONFIRMED
             issue.confirmed_at = utcnow()
@@ -95,10 +115,10 @@ async def confirm_meal(user_id: int, menu_id: int, db: AsyncSession) -> MealIssu
             await db.refresh(issue)
             return issue
         if issue.status == MealIssueStatus.ISSUED:
-            raise_http_400("Meal not served yet")
-        raise_http_400("Meal issue has invalid status")
+            raise_http_400("Питание ещё не выдано")
+        raise_http_400("Некорректный статус выдачи")
 
-    raise_http_400("Meal not issued yet")
+    raise_http_400("Выдача ещё не создана")
 
 
 async def serve_meal(
@@ -107,9 +127,9 @@ async def serve_meal(
     issue = await _get_meal_issue(user_id, menu_id, db)
     if issue:
         if issue.status == MealIssueStatus.CONFIRMED:
-            raise_http_400("Meal already confirmed")
+            raise_http_400("Питание уже подтверждено")
         if issue.status == MealIssueStatus.SERVED:
-            raise_http_400("Meal already served")
+            raise_http_400("Питание уже выдано")
         if issue.status == MealIssueStatus.ISSUED:
             issue.status = MealIssueStatus.SERVED
             issue.served_by_id = served_by_id
@@ -117,14 +137,14 @@ async def serve_meal(
             await db.commit()
             await db.refresh(issue)
             return issue
-        raise_http_400("Meal issue has invalid status")
+        raise_http_400("Некорректный статус выдачи")
 
     user = await _get_user(user_id, db)
     if user.role != UserRole.STUDENT:
-        raise_http_400("Only students can receive meals")
+        raise_http_400("Получать питание могут только ученики")
     menu = await _get_menu(menu_id, db)
     if not await is_meal_paid(user_id, menu, db):
-        raise_http_400("Meal is not paid")
+        raise_http_400("Питание не оплачено")
 
     _consume_menu_items(menu)
     issue = MealIssue(

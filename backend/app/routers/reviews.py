@@ -51,8 +51,8 @@ async def list_reviews_endpoint(
             "Если указан `menu_id`, блюдо должно входить в это меню."
         ),
         extra_responses={
-            400: error_response("Dish not found in menu", "Bad request"),
-            404: error_response("Dish not found", "Not found"),
+            400: error_response("Блюдо не найдено в меню", "Bad request"),
+            404: error_response("Блюдо не найдено", "Not found"),
         },
     ),
     summary="Создать отзыв",

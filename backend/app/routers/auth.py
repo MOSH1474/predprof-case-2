@@ -10,9 +10,10 @@ from ..docs import error_response, public_docs, roles_docs
 from ..models import User
 from ..schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserPublic
 from ..services.auth_service import get_current_user, login_user, register_student
+from ..services.errors import raise_http_401
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-bearer_scheme = HTTPBearer(auto_error=True)
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 @router.post(
@@ -22,7 +23,7 @@ bearer_scheme = HTTPBearer(auto_error=True)
     **public_docs(
         notes="Создает пользователя с ролью `student`.",
         extra_responses={
-            400: error_response("Email already registered", "Bad request"),
+            400: error_response("Email уже зарегистрирован", "Bad request"),
         }
     ),
     summary="Регистрация ученика",
@@ -38,7 +39,7 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
     **public_docs(
         notes="Возвращает токен доступа и профиль пользователя.",
         extra_responses={
-            401: error_response("Invalid email or password", "Unauthorized"),
+            401: error_response("Неверный логин или пароль", "Unauthorized"),
         }
     ),
     summary="Вход в систему",
@@ -69,7 +70,9 @@ async def login(
 )
 async def me(
     db: AsyncSession = Depends(get_db),
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> UserPublic:
+    if credentials is None or not credentials.credentials:
+        raise_http_401("Не авторизован")
     current_user: User = await get_current_user(credentials.credentials, db)
     return UserPublic.model_validate(current_user)

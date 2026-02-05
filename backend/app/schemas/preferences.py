@@ -28,7 +28,7 @@ class PreferencesUpdateRequest(BaseModel):
         if value is None:
             return value
         if any(item <= 0 for item in value):
-            raise ValueError("allergy_ids must be positive integers")
+            raise ValueError("allergy_ids должны быть положительными числами")
         if len(set(value)) != len(value):
-            raise ValueError("allergy_ids must be unique")
+            raise ValueError("allergy_ids должны быть уникальными")
         return value

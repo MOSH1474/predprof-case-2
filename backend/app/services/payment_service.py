@@ -19,7 +19,7 @@ async def _get_menu(menu_id: int, db: AsyncSession) -> Menu:
     result = await db.execute(select(Menu).where(Menu.id == menu_id))
     menu = result.scalar_one_or_none()
     if not menu:
-        raise_http_404("Menu not found")
+        raise_http_404("Меню не найдено")
     return menu
 
 
@@ -29,7 +29,7 @@ async def _get_menu_with_items(menu_id: int, db: AsyncSession) -> Menu:
     )
     menu = result.scalar_one_or_none()
     if not menu:
-        raise_http_404("Menu not found")
+        raise_http_404("Меню не найдено")
     return menu
 
 
@@ -48,7 +48,7 @@ def _consume_menu_items(menu: Menu) -> None:
         if item.remaining_qty is None:
             continue
         if item.remaining_qty <= 0:
-            raise_http_400("Not enough menu items to issue meal")
+                raise_http_400("Недостаточно блюд в меню для выдачи")
         item.remaining_qty -= 1
 
 
@@ -79,7 +79,7 @@ async def _create_issued_meals_for_period(
         try:
             _consume_menu_items(menu)
         except HTTPException as exc:
-            if exc.detail == "Not enough menu items to issue meal":
+            if exc.detail == "Недостаточно блюд в меню для выдачи":
                 continue
             raise
         issue = MealIssue(
@@ -163,16 +163,16 @@ async def create_one_time_payment(
 ) -> Payment:
     menu = await _get_menu_with_items(menu_id, db)
     if menu.price is None:
-        raise_http_400("Menu has no price")
+        raise_http_400("У меню не указана цена")
     if await _has_active_subscription_on_date(user_id, menu.menu_date, db):
-        raise_http_400("Meal already covered by subscription")
+        raise_http_400("Меню уже покрыто абонементом")
     if await _has_paid_one_time(user_id, menu_id, db):
-        raise_http_400("Menu already paid")
+        raise_http_400("Меню уже оплачено")
 
     if auto_issue:
         issue = await _get_meal_issue(user_id, menu.id, db)
         if issue:
-            raise_http_400("Meal already issued")
+            raise_http_400("Выдача уже создана")
         _consume_menu_items(menu)
 
     payment = Payment(
@@ -201,9 +201,9 @@ async def create_subscription_payment(
     user_id: int, period_start: date, period_end: date, db: AsyncSession
 ) -> Payment:
     if period_end < period_start:
-        raise_http_400("period_end must be on or after period_start")
+        raise_http_400("Дата окончания должна быть не раньше даты начала")
     if await _has_overlapping_subscription(user_id, period_start, period_end, db):
-        raise_http_400("Subscription overlaps existing subscription")
+        raise_http_400("Абонемент пересекается с уже существующим")
 
     days = (period_end - period_start).days + 1
     amount = (SUBSCRIPTION_DAILY_RATE * days).quantize(Decimal("0.01"))

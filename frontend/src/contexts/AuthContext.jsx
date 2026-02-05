@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useMemo, useState } from "react";
+﻿import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../api/client.js";
 
 const AuthContext = createContext(null);
@@ -102,6 +102,17 @@ export function AuthProvider({ children }) {
     setToken(null);
     clearSession();
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+    const handleLogoutEvent = () => {
+      logout();
+    };
+    window.addEventListener("auth:logout", handleLogoutEvent);
+    return () => window.removeEventListener("auth:logout", handleLogoutEvent);
+  }, []);
 
   const value = useMemo(
     () => ({

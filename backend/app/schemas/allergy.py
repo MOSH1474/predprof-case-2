@@ -12,7 +12,7 @@ class AllergyBase(BaseModel):
     def _normalize_name(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("name cannot be empty")
+            raise ValueError("Название не может быть пустым")
         return trimmed
 
     @field_validator("description")
@@ -39,7 +39,7 @@ class AllergyUpdate(BaseModel):
             return None
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("name cannot be empty")
+            raise ValueError("Название не может быть пустым")
         return trimmed
 
     @field_validator("description")

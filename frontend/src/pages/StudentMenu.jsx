@@ -25,6 +25,16 @@ const buildSubscriptionForm = () => {
   return buildSubscriptionFormFromDate(new Date());
 };
 
+const toLocalDateValue = (value = new Date()) => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const offset = date.getTimezoneOffset() * 60000;
+  const local = new Date(date.getTime() - offset);
+  return local.toISOString().slice(0, 10);
+};
+
 const buildSubscriptionFormFromDate = (startDate) => {
   const start = new Date();
   if (startDate instanceof Date && !Number.isNaN(startDate.getTime())) {
@@ -34,8 +44,8 @@ const buildSubscriptionFormFromDate = (startDate) => {
   end.setTime(start.getTime());
   end.setDate(end.getDate() + 30);
   return {
-    periodStart: start.toISOString().slice(0, 10),
-    periodEnd: end.toISOString().slice(0, 10),
+    periodStart: toLocalDateValue(start),
+    periodEnd: toLocalDateValue(end),
     ...buildCard(),
   };
 };
@@ -49,6 +59,17 @@ const formatDate = (value) => {
     return value;
   }
   return parsed.toLocaleDateString("ru-RU");
+};
+
+const formatDateTime = (value) => {
+  if (!value) {
+    return "";
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+  return parsed.toLocaleString("ru-RU");
 };
 
 const formatMoney = (value, currency = "RUB") => {
@@ -145,6 +166,8 @@ export default function StudentMenu() {
   const [menus, setMenus] = useState([]);
   const [payments, setPayments] = useState([]);
   const [issues, setIssues] = useState([]);
+  const [preferences, setPreferences] = useState(null);
+  const [myReviews, setMyReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [mealConfirmError, setMealConfirmError] = useState("");
@@ -163,6 +186,19 @@ export default function StudentMenu() {
   const [subscriptionPaying, setSubscriptionPaying] = useState(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
 
+  const [historyTab, setHistoryTab] = useState("pending");
+
+  const [reviewsModalMenu, setReviewsModalMenu] = useState(null);
+  const [reviewsByDish, setReviewsByDish] = useState(new Map());
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState("");
+
+  const [activeReviewForm, setActiveReviewForm] = useState(null);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewFormError, setReviewFormError] = useState("");
+  const [reviewNotice, setReviewNotice] = useState(null);
+
   const sortedMenus = useMemo(() => {
     return [...menus].sort((a, b) => {
       const left = new Date(a.menu_date).getTime();
@@ -174,6 +210,16 @@ export default function StudentMenu() {
   const issueMap = useMemo(() => {
     return new Map(issues.map((issue) => [issue.menu_id, issue]));
   }, [issues]);
+
+  const allergyIdSet = useMemo(() => {
+    return new Set((preferences?.allergies || []).map((item) => item.id));
+  }, [preferences]);
+
+  const myReviewMap = useMemo(() => {
+    return new Map(
+      myReviews.map((review) => [`${review.menu_id || "none"}-${review.dish_id}`, review])
+    );
+  }, [myReviews]);
 
   const paidMenuIds = useMemo(() => {
     const ids = new Set();
@@ -196,7 +242,7 @@ export default function StudentMenu() {
   }, [payments]);
 
   const activeSubscription = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toLocalDateValue();
     const candidates = subscriptionPayments.filter((payment) =>
       isWithinPeriod(today, payment.period_start, payment.period_end)
     );
@@ -209,7 +255,7 @@ export default function StudentMenu() {
   }, [subscriptionPayments]);
 
   const upcomingSubscription = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toLocalDateValue();
     const candidates = subscriptionPayments.filter(
       (payment) => payment.period_start && payment.period_start > today
     );
@@ -230,6 +276,22 @@ export default function StudentMenu() {
     )[0];
   }, [subscriptionPayments]);
 
+  const subscriptionStatus = activeSubscription
+    ? "active"
+    : upcomingSubscription
+    ? "upcoming"
+    : "inactive";
+
+  const subscriptionText = activeSubscription
+    ? `Активный абонемент: ${formatDate(activeSubscription.period_start)} — ${formatDate(
+        activeSubscription.period_end
+      )}`
+    : upcomingSubscription
+    ? `Уже оформлен абонемент: ${formatDate(
+        upcomingSubscription.period_start
+      )} — ${formatDate(upcomingSubscription.period_end)} (еще не активен).`
+    : "Абонемент не активен. Можно оформить на этой странице.";
+
   const isMenuCoveredBySubscription = (menu) => {
     return subscriptionPayments.some((payment) =>
       isWithinPeriod(menu.menu_date, payment.period_start, payment.period_end)
@@ -239,8 +301,7 @@ export default function StudentMenu() {
   const isMenuPaid = (menu) => {
     return (
       issueMap.has(menu.id) ||
-      paidMenuIds.has(menu.id) ||
-      isMenuCoveredBySubscription(menu)
+      paidMenuIds.has(menu.id)
     );
   };
 
@@ -251,13 +312,18 @@ export default function StudentMenu() {
 
   const unpaidMenus = useMemo(
     () => sortedMenus.filter((menu) => !isMenuPaid(menu)),
-    [sortedMenus, issueMap, paidMenuIds, subscriptionPayments]
+    [sortedMenus, issueMap, paidMenuIds]
   );
 
   const issuedMenus = useMemo(
     () =>
       sortedMenus.filter((menu) => isMenuPaid(menu) && !isMenuReceived(menu)),
-    [sortedMenus, issueMap, paidMenuIds, subscriptionPayments]
+    [sortedMenus, issueMap, paidMenuIds]
+  );
+
+  const confirmedMenus = useMemo(
+    () => sortedMenus.filter((menu) => isMenuReceived(menu)),
+    [sortedMenus, issueMap]
   );
 
   useEffect(() => {
@@ -268,33 +334,69 @@ export default function StudentMenu() {
     const loadData = async () => {
       setLoading(true);
       setLoadError("");
-      const results = await Promise.allSettled([
-        apiRequest("/menus/", { token }),
-        apiRequest("/payments/me", { token }),
-        apiRequest("/meal-issues/me", { token }),
-      ]);
+      const tasks = [
+        { key: "menus", promise: apiRequest("/menus/", { token }) },
+        { key: "payments", promise: apiRequest("/payments/me", { token }) },
+        { key: "issues", promise: apiRequest("/meal-issues/me", { token }) },
+      ];
+      if (user?.role === "student") {
+        tasks.push({
+          key: "preferences",
+          promise: apiRequest("/preferences/me", { token }),
+        });
+      }
+      if (user?.id) {
+        tasks.push({
+          key: "reviews",
+          promise: apiRequest(`/reviews/?user_id=${user.id}`, { token }),
+        });
+      }
 
-      const [menusResult, paymentsResult, issuesResult] = results;
+      const results = await Promise.allSettled(tasks.map((task) => task.promise));
+      const resultByKey = new Map(
+        tasks.map((task, index) => [task.key, results[index]])
+      );
+
+      const menusResult = resultByKey.get("menus");
+      const paymentsResult = resultByKey.get("payments");
+      const issuesResult = resultByKey.get("issues");
+      const preferencesResult = resultByKey.get("preferences");
+      const reviewsResult = resultByKey.get("reviews");
       const errors = [];
 
-      if (menusResult.status === "fulfilled") {
+      if (menusResult?.status === "fulfilled") {
         setMenus(menusResult.value.items || []);
-      } else {
+      } else if (menusResult) {
         errors.push(menusResult.reason?.message || "Не удалось загрузить меню.");
       }
 
-      if (paymentsResult.status === "fulfilled") {
+      if (paymentsResult?.status === "fulfilled") {
         setPayments(paymentsResult.value.items || []);
-      } else {
+      } else if (paymentsResult) {
         errors.push(paymentsResult.reason?.message || "Не удалось загрузить оплаты.");
       }
 
-      if (issuesResult.status === "fulfilled") {
+      if (issuesResult?.status === "fulfilled") {
         setIssues(issuesResult.value.items || []);
-      } else {
+      } else if (issuesResult) {
         errors.push(
           issuesResult.reason?.message || "Не удалось загрузить данные по выдачам."
         );
+      }
+
+      if (preferencesResult?.status === "fulfilled") {
+        setPreferences(preferencesResult.value);
+      } else if (preferencesResult) {
+        errors.push(
+          preferencesResult.reason?.message ||
+            "Не удалось загрузить предпочтения питания."
+        );
+      }
+
+      if (reviewsResult?.status === "fulfilled") {
+        setMyReviews(reviewsResult.value.items || []);
+      } else if (reviewsResult) {
+        errors.push(reviewsResult.reason?.message || "Не удалось загрузить отзывы.");
       }
 
       setLoadError(errors.join(" "));
@@ -302,7 +404,7 @@ export default function StudentMenu() {
     };
 
     loadData();
-  }, [token]);
+  }, [token, user?.id, user?.role]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -352,8 +454,46 @@ export default function StudentMenu() {
     setMenuPaymentError("");
   };
 
+  const issueMenuFromSubscription = async (menu) => {
+    if (!menu) {
+      return;
+    }
+    setMenuPaying(true);
+    setMenuPaymentError("");
+    setMenuPaymentSuccess("");
+    try {
+      await apiRequest("/meal-issues/me/issue", {
+        method: "POST",
+        token,
+        body: {
+          menu_id: menu.id,
+        },
+      });
+      const label = MEAL_TYPE_LABELS[menu.meal_type] || menu.meal_type;
+      setMenuPaymentSuccess(
+        `Меню ${label} от ${formatDate(menu.menu_date)} добавлено в ожидание выдачи по абонементу.`
+      );
+      await refreshPaymentsAndIssues();
+    } catch (err) {
+      setMenuPaymentError(err.message);
+    } finally {
+      setMenuPaying(false);
+    }
+  };
+
+  const handleMenuPayClick = async (menu) => {
+    if (menuPaying) {
+      return;
+    }
+    if (isMenuCoveredBySubscription(menu)) {
+      await issueMenuFromSubscription(menu);
+      return;
+    }
+    openMenuPayment(menu);
+  };
+
   const openSubscriptionModal = () => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toLocalDateValue();
     let startDate = new Date();
     if (latestSubscription?.period_end && latestSubscription.period_end >= today) {
       const nextStart = addDays(latestSubscription.period_end, 1);
@@ -497,10 +637,124 @@ export default function StudentMenu() {
     }
   };
 
-  const renderMenuCard = (menu, { showPay }) => {
+  const openReviewsModal = async (menu) => {
+    if (!menu) {
+      return;
+    }
+    setReviewsModalMenu(menu);
+    setReviewsByDish(new Map());
+    setReviewsError("");
+
+    const dishIds = Array.from(
+      new Set(
+        (menu.menu_items || [])
+          .map((item) => item.dish?.id)
+          .filter((dishId) => Number.isFinite(dishId))
+      )
+    );
+    if (!dishIds.length) {
+      setReviewsLoading(false);
+      return;
+    }
+    setReviewsLoading(true);
+    try {
+      const results = await Promise.allSettled(
+        dishIds.map((dishId) => apiRequest(`/reviews/?dish_id=${dishId}`, { token }))
+      );
+      const nextMap = new Map();
+      results.forEach((result, index) => {
+        const dishId = dishIds[index];
+        if (result.status === "fulfilled") {
+          nextMap.set(dishId, result.value.items || []);
+        } else {
+          nextMap.set(dishId, []);
+        }
+      });
+      setReviewsByDish(nextMap);
+      if (results.some((result) => result.status === "rejected")) {
+        setReviewsError("Не удалось загрузить часть отзывов.");
+      }
+    } catch (err) {
+      setReviewsError(err.message);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const closeReviewsModal = () => {
+    setReviewsModalMenu(null);
+    setReviewsByDish(new Map());
+    setReviewsError("");
+    setReviewsLoading(false);
+  };
+
+  const openReviewForm = (menuId, dishId) => {
+    if (!menuId || !dishId) {
+      return;
+    }
+    setActiveReviewForm({ menuId, dishId });
+    setReviewForm({ rating: 5, comment: "" });
+    setReviewFormError("");
+    setReviewNotice(null);
+  };
+
+  const handleReviewFormChange = (event) => {
+    const { name, value } = event.target;
+    setReviewForm((prev) => ({
+      ...prev,
+      [name]: name === "rating" ? Number(value) : value,
+    }));
+    if (reviewFormError) {
+      setReviewFormError("");
+    }
+  };
+
+  const submitReview = async (event, menuId, dishId) => {
+    event.preventDefault();
+    if (!menuId || !dishId) {
+      setReviewFormError("Не удалось определить блюдо для отзыва.");
+      return;
+    }
+    if (reviewSubmitting) {
+      return;
+    }
+    if (!reviewForm.rating || reviewForm.rating < 1) {
+      setReviewFormError("Укажите оценку от 1 до 5.");
+      return;
+    }
+    setReviewSubmitting(true);
+    setReviewFormError("");
+    try {
+      const response = await apiRequest("/reviews/", {
+        method: "POST",
+        token,
+        body: {
+          dish_id: dishId,
+          menu_id: menuId,
+          rating: reviewForm.rating,
+          comment: reviewForm.comment.trim() || null,
+        },
+      });
+      setMyReviews((prev) => [response, ...prev]);
+      setReviewNotice({
+        menuId,
+        dishId,
+        message: "Спасибо! Отзыв отправлен.",
+      });
+      setActiveReviewForm(null);
+    } catch (err) {
+      setReviewFormError(err.message);
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  const renderMenuCard = (menu, { showPay, allowReview = false }) => {
     const issue = issueMap.get(menu.id);
     const coveredBySubscription = isMenuCoveredBySubscription(menu);
     const canConfirm = issue?.status === "served";
+    const payLabel = coveredBySubscription ? "Оформить выдачу" : "Оплатить";
+    const reviewsDisabled = reviewsLoading && reviewsModalMenu?.id === menu.id;
     const actionLabel = confirmingMenuId === menu.id
       ? "Подтверждаем..."
       : canConfirm
@@ -540,23 +794,131 @@ export default function StudentMenu() {
           Статус: <strong>{statusLabel}</strong>
         </div>
         <div className="menu-items">
-          {(menu.menu_items || []).map((item) => (
-            <div key={item.id} className="menu-item">
-              <div>
-                <strong>{item.dish?.name || "Блюдо"}</strong>
-                {item.dish?.description && (
-                  <p className="form-hint">{item.dish.description}</p>
+          {(menu.menu_items || []).map((item) => {
+            const dishId = item.dish?.id;
+            const dishAllergies = item.dish?.allergies || [];
+            const conflictNames = dishAllergies
+              .filter((allergy) => allergyIdSet.has(allergy.id))
+              .map((allergy) => allergy.name)
+              .filter(Boolean);
+            const hasConflict = conflictNames.length > 0;
+            const reviewKey = dishId ? `${menu.id}-${dishId}` : null;
+            const myReview = reviewKey ? myReviewMap.get(reviewKey) : null;
+            const isActiveReview =
+              activeReviewForm?.menuId === menu.id && activeReviewForm?.dishId === dishId;
+            const notice =
+              reviewNotice &&
+              reviewNotice.menuId === menu.id &&
+              reviewNotice.dishId === dishId
+                ? reviewNotice.message
+                : "";
+
+            return (
+              <div
+                key={item.id}
+                className={`menu-item${hasConflict ? " menu-item-alert" : ""}`}
+              >
+                <div>
+                  <strong>{item.dish?.name || "Блюдо"}</strong>
+                  {item.dish?.description && (
+                    <p className="form-hint">{item.dish.description}</p>
+                  )}
+                  {hasConflict && (
+                    <div className="form-hint allergy-hint">
+                      Содержит ваши аллергены: {conflictNames.join(", ")}.
+                    </div>
+                  )}
+                </div>
+                <div className="menu-meta">
+                  {hasConflict && <span className="allergy-badge">Аллерген</span>}
+                  {item.portion_size != null && <span>Порция: {item.portion_size}</span>}
+                  {item.planned_qty != null && <span>План: {item.planned_qty}</span>}
+                  {item.remaining_qty != null && (
+                    <span>Осталось: {item.remaining_qty}</span>
+                  )}
+                </div>
+                {allowReview && dishId && (
+                  <div style={{ width: "100%" }}>
+                    {myReview ? (
+                      <div className="form-hint">
+                        Ваш отзыв: {myReview.rating}/5
+                        {myReview.comment ? ` · ${myReview.comment}` : ""} ·{" "}
+                        {formatDateTime(myReview.created_at)}
+                      </div>
+                    ) : isActiveReview ? (
+                      <form
+                        className="auth-form"
+                        onSubmit={(event) => submitReview(event, menu.id, dishId)}
+                        style={{ marginTop: "0.75rem" }}
+                      >
+                        <div className="option-grid">
+                          <label className="form-field">
+                            Оценка
+                            <select
+                              name="rating"
+                              value={reviewForm.rating}
+                              onChange={handleReviewFormChange}
+                              disabled={reviewSubmitting}
+                            >
+                              {[5, 4, 3, 2, 1].map((value) => (
+                                <option key={value} value={value}>
+                                  {value}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label className="form-field">
+                            Комментарий
+                            <textarea
+                              name="comment"
+                              rows="2"
+                              value={reviewForm.comment}
+                              onChange={handleReviewFormChange}
+                              placeholder="Напишите впечатления"
+                              disabled={reviewSubmitting}
+                            />
+                          </label>
+                        </div>
+                        {reviewFormError && (
+                          <div className="form-error" role="alert">
+                            {reviewFormError}
+                          </div>
+                        )}
+                        <div className="button-row">
+                          <button
+                            type="submit"
+                            className="primary-button"
+                            disabled={reviewSubmitting}
+                          >
+                            {reviewSubmitting ? "Отправляем..." : "Отправить отзыв"}
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => setActiveReviewForm(null)}
+                            disabled={reviewSubmitting}
+                          >
+                            Отмена
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="button-row" style={{ marginTop: "0.75rem" }}>
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          onClick={() => openReviewForm(menu.id, dishId)}
+                        >
+                          Оставить отзыв
+                        </button>
+                      </div>
+                    )}
+                    {notice && <div className="form-success">{notice}</div>}
+                  </div>
                 )}
               </div>
-              <div className="menu-meta">
-                {item.portion_size != null && <span>Порция: {item.portion_size}</span>}
-                {item.planned_qty != null && <span>План: {item.planned_qty}</span>}
-                {item.remaining_qty != null && (
-                  <span>Осталось: {item.remaining_qty}</span>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {(!menu.menu_items || menu.menu_items.length === 0) && (
             <div className="summary">Позиции меню не заполнены.</div>
           )}
@@ -565,13 +927,24 @@ export default function StudentMenu() {
           <div className="form-hint">Цена меню пока не указана.</div>
         )}
         <div className="button-row">
-          {showPay && menu.price != null && (
+          {showPay && (menu.price != null || coveredBySubscription) && (
             <button
               type="button"
               className="primary-button"
-              onClick={() => openMenuPayment(menu)}
+              onClick={() => handleMenuPayClick(menu)}
+              disabled={menuPaying}
             >
-              Оплатить
+              {payLabel}
+            </button>
+          )}
+          {showPay && (
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => openReviewsModal(menu)}
+              disabled={reviewsDisabled}
+            >
+              {reviewsDisabled ? "Загружаем отзывы..." : "Отзывы"}
             </button>
           )}
           {!showPay && (
@@ -617,21 +990,12 @@ export default function StudentMenu() {
         </div>
       )}
 
-      {activeSubscription ? (
-        <div className="summary" style={{ marginTop: "0.75rem" }}>
-          Активный абонемент: {formatDate(activeSubscription.period_start)} —{" "}
-          {formatDate(activeSubscription.period_end)}
-        </div>
-      ) : upcomingSubscription ? (
-        <div className="summary" style={{ marginTop: "0.75rem" }}>
-          Уже оформлен абонемент: {formatDate(upcomingSubscription.period_start)} —{" "}
-          {formatDate(upcomingSubscription.period_end)} (еще не активен).
-        </div>
-      ) : (
-        <div className="summary" style={{ marginTop: "0.75rem" }}>
-          Абонемент не активен. Можно оформить на этой странице.
-        </div>
-      )}
+      <div
+        className={`subscription-banner subscription-${subscriptionStatus}`}
+        style={{ marginTop: "0.75rem" }}
+      >
+        {subscriptionText}
+      </div>
 
       {subscriptionSuccess && (
         <div className="form-success" style={{ marginTop: "1rem" }}>
@@ -642,6 +1006,11 @@ export default function StudentMenu() {
       {menuPaymentSuccess && (
         <div className="form-success" style={{ marginTop: "1rem" }}>
           {menuPaymentSuccess}
+        </div>
+      )}
+      {menuPaymentError && !activeMenu && (
+        <div className="form-error" role="alert" style={{ marginTop: "1rem" }}>
+          {menuPaymentError}
         </div>
       )}
 
@@ -658,7 +1027,9 @@ export default function StudentMenu() {
 
       <div className="form-group" style={{ marginTop: "1.5rem" }}>
         <h3>Доступные меню</h3>
-        <p className="form-hint">Выберите меню и оплатите его разово.</p>
+        <p className="form-hint">
+          Выберите меню и оплатите его разово или оформите выдачу по абонементу.
+        </p>
       </div>
 
       {loading ? (
@@ -676,19 +1047,140 @@ export default function StudentMenu() {
       )}
 
       <div className="form-group" style={{ marginTop: "2rem" }}>
-        <h3>Готовящиеся меню</h3>
+        <h3>Выдача и история</h3>
         <p className="form-hint">
-          Здесь показываются меню, которые уже оплачены и ожидают выдачи.
+          Переключайтесь между готовящимися меню и подтвержденной историей.
         </p>
+        <div className="button-row" style={{ marginTop: "0.75rem" }}>
+          <button
+            type="button"
+            className={historyTab === "pending" ? "primary-button" : "secondary-button"}
+            onClick={() => setHistoryTab("pending")}
+          >
+            Готовящиеся меню
+          </button>
+          <button
+            type="button"
+            className={historyTab === "confirmed" ? "primary-button" : "secondary-button"}
+            onClick={() => setHistoryTab("confirmed")}
+          >
+            Полученные меню
+          </button>
+        </div>
       </div>
 
-      <div className="menu-grid">
-        {issuedMenus.length === 0 ? (
-          <div className="summary">Пока нет оплаченных меню.</div>
-        ) : (
-          issuedMenus.map((menu) => renderMenuCard(menu, { showPay: false }))
-        )}
-      </div>
+      {historyTab === "pending" ? (
+        <>
+          <div className="form-hint" style={{ marginBottom: "1rem" }}>
+            Здесь показываются меню, которые уже оплачены и ожидают выдачи.
+          </div>
+          <div className="menu-grid">
+            {issuedMenus.length === 0 ? (
+              <div className="summary">Пока нет оплаченных меню.</div>
+            ) : (
+              issuedMenus.map((menu) => renderMenuCard(menu, { showPay: false }))
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="form-hint" style={{ marginBottom: "1rem" }}>
+            Подтвержденные меню. Здесь можно оставить отзыв о блюдах.
+          </div>
+          <div className="menu-grid">
+            {confirmedMenus.length === 0 ? (
+              <div className="summary">Пока нет подтвержденных меню.</div>
+            ) : (
+              confirmedMenus.map((menu) =>
+                renderMenuCard(menu, { showPay: false, allowReview: true })
+              )
+            )}
+          </div>
+        </>
+      )}
+
+      {reviewsModalMenu && (
+        <div className="modal-backdrop" onClick={closeReviewsModal}>
+          <div
+            className="modal-card"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div>
+                <h3>Отзывы о блюдах</h3>
+                <p className="form-hint">
+                  {MEAL_TYPE_LABELS[reviewsModalMenu.meal_type] ||
+                    reviewsModalMenu.meal_type}{" "}
+                  · {formatDate(reviewsModalMenu.menu_date)}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="secondary-button modal-close"
+                onClick={closeReviewsModal}
+              >
+                Закрыть
+              </button>
+            </div>
+
+            {reviewsError && (
+              <div className="form-error" role="alert">
+                {reviewsError}
+              </div>
+            )}
+            {reviewsLoading && (
+              <div className="form-hint">Загружаем отзывы...</div>
+            )}
+
+            <div className="data-grid">
+              {(reviewsModalMenu.menu_items || []).length === 0 && (
+                <div className="summary">В этом меню пока нет блюд.</div>
+              )}
+              {(reviewsModalMenu.menu_items || []).map((item) => {
+                const dishId = item.dish?.id;
+                const reviews = dishId ? reviewsByDish.get(dishId) || [] : [];
+                const average =
+                  reviews.length > 0
+                    ? (
+                        reviews.reduce((sum, review) => sum + review.rating, 0) /
+                        reviews.length
+                      ).toFixed(1)
+                    : null;
+                return (
+                  <article key={item.id} className="data-card">
+                    <header>
+                      <strong>{item.dish?.name || "Блюдо"}</strong>
+                      <span className="status-pill status-neutral">
+                        {reviews.length} отзыв(ов)
+                      </span>
+                    </header>
+                    <div className="summary">
+                      {average ? `Средняя оценка: ${average}/5` : "Пока нет оценок."}
+                    </div>
+                    {reviews.length === 0 ? (
+                      <div className="form-hint">Будьте первым, кто оставит отзыв.</div>
+                    ) : (
+                      <div className="data-list">
+                        {reviews.map((review) => (
+                          <div key={review.id} className="data-list-row">
+                            <span>
+                              Оценка: {review.rating}/5
+                              {review.comment ? ` · ${review.comment}` : ""}
+                            </span>
+                            <span>{formatDateTime(review.created_at)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {activeMenu && (
         <div className="modal-backdrop" onClick={closeMenuPayment}>

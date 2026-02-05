@@ -14,7 +14,7 @@ async def register_student(payload: RegisterRequest, db: AsyncSession) -> User:
     result = await db.execute(select(User).where(User.email == payload.email.lower()))
     existing = result.scalar_one_or_none()
     if existing:
-        raise_http_400("Email already registered")
+        raise_http_400("Email уже зарегистрирован")
 
     user = User(
         email=payload.email.lower(),
@@ -34,9 +34,9 @@ async def authenticate_user(payload: LoginRequest, db: AsyncSession) -> User:
     result = await db.execute(select(User).where(User.email == payload.email.lower()))
     user = result.scalar_one_or_none()
     if not user or not user.is_active:
-        raise_http_401("Invalid email or password")
+        raise_http_401("Неверный логин или пароль")
     if not verify_password(payload.password, user.password_hash):
-        raise_http_401("Invalid email or password")
+        raise_http_401("Неверный логин или пароль")
     return user
 
 
@@ -50,18 +50,18 @@ async def get_current_user(token: str, db: AsyncSession) -> User:
     try:
         payload = decode_access_token(token)
     except JWTError:
-        raise_http_401("Invalid authentication credentials")
+        raise_http_401("Недействительные учетные данные")
 
     subject = payload.get("sub")
     if not subject:
-        raise_http_401("Invalid authentication credentials")
+        raise_http_401("Недействительные учетные данные")
 
     try:
         user_id = int(subject)
     except ValueError:
-        raise_http_401("Invalid authentication credentials")
+        raise_http_401("Недействительные учетные данные")
 
     user = await db.get(User, user_id)
     if not user or not user.is_active:
-        raise_http_401("Inactive or missing user")
+        raise_http_401("Пользователь неактивен или не найден")
     return user

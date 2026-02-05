@@ -16,7 +16,7 @@ class ProductBase(BaseModel):
     def _normalize_name(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("name cannot be empty")
+            raise ValueError("Название не может быть пустым")
         return trimmed
 
     @field_validator("unit")
@@ -24,7 +24,7 @@ class ProductBase(BaseModel):
     def _normalize_unit(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("unit cannot be empty")
+            raise ValueError("Единица измерения не может быть пустой")
         return trimmed
 
     @field_validator("category")
@@ -53,7 +53,7 @@ class ProductUpdate(BaseModel):
             return None
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("name cannot be empty")
+            raise ValueError("Название не может быть пустым")
         return trimmed
 
     @field_validator("unit")
@@ -63,7 +63,7 @@ class ProductUpdate(BaseModel):
             return None
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("unit cannot be empty")
+            raise ValueError("Единица измерения не может быть пустой")
         return trimmed
 
     @field_validator("category")

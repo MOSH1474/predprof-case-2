@@ -21,9 +21,9 @@ async def _get_dish(dish_id: int, db: AsyncSession) -> Dish:
     result = await db.execute(select(Dish).where(Dish.id == dish_id))
     dish = result.scalar_one_or_none()
     if not dish:
-        raise_http_404("Dish not found")
+        raise_http_404("Блюдо не найдено")
     if not dish.is_active:
-        raise_http_400("Dish is inactive")
+        raise_http_400("Блюдо неактивно")
     return dish
 
 
@@ -31,7 +31,7 @@ async def _get_menu(menu_id: int, db: AsyncSession) -> Menu:
     result = await db.execute(select(Menu).where(Menu.id == menu_id))
     menu = result.scalar_one_or_none()
     if not menu:
-        raise_http_404("Menu not found")
+        raise_http_404("Меню не найдено")
     return menu
 
 
@@ -43,7 +43,7 @@ async def _ensure_menu_contains_dish(menu_id: int, dish_id: int, db: AsyncSessio
         )
     )
     if result.scalar_one_or_none() is None:
-        raise_http_400("Dish not found in menu")
+        raise_http_400("Блюдо не найдено в меню")
 
 
 async def list_reviews(
