@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from fastapi import HTTPException
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -50,44 +49,6 @@ def _consume_menu_items(menu: Menu) -> None:
         if item.remaining_qty <= 0:
                 raise_http_400("Недостаточно блюд в меню для выдачи")
         item.remaining_qty -= 1
-
-
-async def _create_issued_meals_for_period(
-    user_id: int, period_start: date, period_end: date, db: AsyncSession
-) -> None:
-    result = await db.execute(
-        select(Menu)
-        .options(selectinload(Menu.menu_items))
-        .where(Menu.menu_date >= period_start, Menu.menu_date <= period_end)
-        .order_by(Menu.menu_date, Menu.id)
-    )
-    menus = list(result.scalars().all())
-    if not menus:
-        return
-
-    menu_ids = [menu.id for menu in menus]
-    existing_result = await db.execute(
-        select(MealIssue.menu_id).where(
-            MealIssue.user_id == user_id, MealIssue.menu_id.in_(menu_ids)
-        )
-    )
-    existing_menu_ids = {row[0] for row in existing_result.all()}
-
-    for menu in menus:
-        if menu.id in existing_menu_ids:
-            continue
-        try:
-            _consume_menu_items(menu)
-        except HTTPException as exc:
-            if exc.detail == "Недостаточно блюд в меню для выдачи":
-                continue
-            raise
-        issue = MealIssue(
-            user_id=user_id,
-            menu_id=menu.id,
-            status=MealIssueStatus.ISSUED,
-        )
-        db.add(issue)
 
 
 async def _has_paid_one_time(user_id: int, menu_id: int, db: AsyncSession) -> bool:
@@ -219,7 +180,6 @@ async def create_subscription_payment(
         period_end=period_end,
     )
     db.add(payment)
-    await _create_issued_meals_for_period(user_id, period_start, period_end, db)
     await db.commit()
     await db.refresh(payment)
     return payment
