@@ -280,7 +280,7 @@ export default function CookPurchases() {
       </form>
 
       <div className="form-group">
-        <h3>стория заявок</h3>
+        <h3>История заявок</h3>
         {loading ? (
           <div className="form-hint">Загружаем заявки...</div>
         ) : (

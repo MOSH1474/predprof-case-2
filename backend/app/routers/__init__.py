@@ -1,4 +1,4 @@
-from .auth import router as auth_router
+﻿from .auth import router as auth_router
 from .admin_reports import router as admin_reports_router
 from .admin_stats import router as admin_stats_router
 from .allergies import router as allergies_router
@@ -11,6 +11,7 @@ from .preferences import router as preferences_router
 from .products import router as products_router
 from .purchase_requests import router as purchase_requests_router
 from .reviews import router as reviews_router
+from .notifications import router as notifications_router
 from .users import router as users_router
 
 __all__ = [
@@ -27,5 +28,6 @@ __all__ = [
     "products_router",
     "purchase_requests_router",
     "reviews_router",
+    "notifications_router",
     "users_router",
 ]

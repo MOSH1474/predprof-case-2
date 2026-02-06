@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models import User, UserRole
 from ..schemas.auth import LoginRequest, RegisterRequest
+from .notification_service import create_notification_for_users
 from .security import create_access_token, decode_access_token, hash_password, verify_password
 from .errors import raise_http_400, raise_http_401
 
@@ -27,6 +28,12 @@ async def register_student(payload: RegisterRequest, db: AsyncSession) -> User:
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    await create_notification_for_users(
+        db,
+        title="Добро пожаловать",
+        body="Спасибо за регистрацию в системе школьной столовой.",
+        recipient_ids=[user.id],
+    )
     return user
 
 

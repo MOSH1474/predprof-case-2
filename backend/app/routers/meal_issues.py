@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timezone
+
+import asyncio
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +22,7 @@ from ..services.meal_issue_service import (
     issue_meal,
     list_meal_issues,
     list_meal_issues_for_staff,
+    list_served_meal_issues_since,
     serve_meal,
 )
 
@@ -40,6 +43,38 @@ async def list_my_meal_issues(
     return MealIssueListResponse(
         items=[MealIssuePublic.model_validate(item) for item in issues]
     )
+
+
+@router.get(
+    "/me/long-poll",
+    response_model=MealIssueListResponse,
+    **roles_docs("student", "admin"),
+    summary="Долгий опрос выдач питания",
+)
+async def long_poll_my_meal_issues(
+    since: datetime | None = Query(default=None),
+    timeout: int = Query(default=25, ge=5, le=60),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.STUDENT)),
+) -> MealIssueListResponse:
+    since_value = since
+    if since_value is None:
+        since_value = datetime.now(timezone.utc)
+    elif since_value.tzinfo is None:
+        since_value = since_value.replace(tzinfo=timezone.utc)
+
+    start = datetime.now(timezone.utc)
+    while True:
+        issues = await list_served_meal_issues_since(current_user.id, since_value, db)
+        if issues:
+            return MealIssueListResponse(
+                items=[MealIssuePublic.model_validate(item) for item in issues]
+            )
+
+        elapsed = (datetime.now(timezone.utc) - start).total_seconds()
+        if elapsed >= timeout:
+            return MealIssueListResponse(items=[])
+        await asyncio.sleep(1)
 
 
 @router.get(

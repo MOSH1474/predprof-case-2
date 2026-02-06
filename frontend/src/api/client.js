@@ -60,9 +60,9 @@ export async function apiRequest(path, options = {}) {
   });
 
   const contentType = response.headers.get("content-type") || "";
-  const data = contentType.includes("application/json")
-    ? await response.json()
-    : await response.text();
+  const raw = await response.text();
+  const data =
+    contentType.includes("application/json") && raw ? JSON.parse(raw) : raw;
 
   if (!response.ok) {
     if (response.status === 401 && token) {

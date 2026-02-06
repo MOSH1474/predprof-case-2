@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
 
 from .docs import public_docs
 from .routers import (
@@ -15,6 +15,7 @@ from .routers import (
     products_router,
     purchase_requests_router,
     reviews_router,
+    notifications_router,
     users_router,
 )
 
@@ -63,6 +64,7 @@ OPENAPI_TAGS = [
     {"name": "inventory-transactions", "description": "Движение склада и корректировки"},
     {"name": "purchase-requests", "description": "Заявки на закупку и согласование"},
     {"name": "reviews", "description": "Отзывы и оценки блюд"},
+    {"name": "notifications", "description": "Уведомления пользователей"},
     {"name": "users", "description": "Пользователи (для кухни/админа)"},
 ]
 
@@ -85,6 +87,7 @@ app.include_router(preferences_router)
 app.include_router(products_router)
 app.include_router(purchase_requests_router)
 app.include_router(reviews_router)
+app.include_router(notifications_router)
 app.include_router(users_router)
 
 
@@ -95,3 +98,7 @@ app.include_router(users_router)
 )
 def health():
     return {"status": "ok"}
+
+
+
+

@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { apiRequest } from "../api/client.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { useToast } from "../contexts/ToastContext.jsx";
+import { playNotificationSound } from "../utils/notificationSound.js";
 
 const MEAL_TYPE_LABELS = {
   breakfast: "Завтрак",
@@ -86,6 +87,30 @@ const formatMoney = (value, currency = "RUB") => {
     currency,
     maximumFractionDigits: 2,
   }).format(parsed);
+};
+
+const mergeIssues = (prev, incoming) => {
+  const map = new Map(prev.map((issue) => [issue.id, issue]));
+  incoming.forEach((issue) => {
+    map.set(issue.id, { ...map.get(issue.id), ...issue });
+  });
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+};
+
+const getLatestIssueTimestamp = (issues) => {
+  if (!issues.length) {
+    return null;
+  }
+  let latest = issues[0].served_at || issues[0].created_at;
+  issues.forEach((issue) => {
+    const candidate = issue.served_at || issue.created_at;
+    if (candidate && new Date(candidate) > new Date(latest)) {
+      latest = candidate;
+    }
+  });
+  return latest;
 };
 
 const isWithinPeriod = (dateValue, start, end) => {
@@ -174,6 +199,7 @@ export default function StudentMenu() {
   const [mealConfirmError, setMealConfirmError] = useState("");
   const [mealConfirmSuccess, setMealConfirmSuccess] = useState("");
   const [confirmingMenuId, setConfirmingMenuId] = useState(null);
+  const lastIssueCheckRef = useRef(new Date().toISOString());
 
   const [activeMenu, setActiveMenu] = useState(null);
   const [menuCard, setMenuCard] = useState(buildCard);
@@ -379,7 +405,12 @@ export default function StudentMenu() {
       }
 
       if (issuesResult?.status === "fulfilled") {
-        setIssues(issuesResult.value.items || []);
+        const list = issuesResult.value.items || [];
+        setIssues(list);
+        const latest = getLatestIssueTimestamp(list);
+        if (latest) {
+          lastIssueCheckRef.current = latest;
+        }
       } else if (issuesResult) {
         errors.push(
           issuesResult.reason?.message || "Не удалось загрузить данные по выдачам."
@@ -407,6 +438,43 @@ export default function StudentMenu() {
 
     loadData();
   }, [token, user?.id, user?.role]);
+
+  useEffect(() => {
+    if (!token || user?.role !== "student") {
+      return undefined;
+    }
+    let isActive = true;
+    const poll = async () => {
+      while (isActive) {
+        const since = lastIssueCheckRef.current || new Date().toISOString();
+        try {
+          const data = await apiRequest(
+            `/meal-issues/me/long-poll?since=${encodeURIComponent(since)}`,
+            { token }
+          );
+          if (!isActive) {
+            return;
+          }
+          const incoming = Array.isArray(data.items) ? data.items : [];
+          if (incoming.length) {
+            setIssues((prev) => mergeIssues(prev, incoming));
+            const latest = getLatestIssueTimestamp(incoming);
+            lastIssueCheckRef.current = latest || new Date().toISOString();
+            playNotificationSound();
+            toast.info("Питание выдано. Подтвердите получение.");
+          } else {
+            lastIssueCheckRef.current = new Date().toISOString();
+          }
+        } catch {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+      }
+    };
+    poll();
+    return () => {
+      isActive = false;
+    };
+  }, [token, user?.role, toast]);
 
   useEffect(() => {
     if (loadError) {

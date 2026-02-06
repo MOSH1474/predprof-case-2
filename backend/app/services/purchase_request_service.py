@@ -10,6 +10,7 @@ from ..models import Product, PurchaseRequest, PurchaseRequestItem, PurchaseRequ
 from ..models.utils import utcnow
 from ..schemas.purchase_request import PurchaseRequestCreate, PurchaseRequestItemCreate
 from .errors import raise_http_400, raise_http_404
+from .notification_service import create_notification_for_users, list_admin_ids
 
 
 def _normalize_optional_text(value: str | None) -> str | None:
@@ -105,7 +106,17 @@ async def create_purchase_request(
     )
     db.add(purchase_request)
     await db.commit()
-    return await get_purchase_request(purchase_request.id, db)
+    purchase_request = await get_purchase_request(purchase_request.id, db)
+    admin_ids = await list_admin_ids(db)
+    if admin_ids:
+        await create_notification_for_users(
+            db,
+            title="Новая заявка на закупку",
+            body=f"Поступила заявка №{purchase_request.id} на закупку продуктов.",
+            recipient_ids=admin_ids,
+            created_by_id=requested_by_id,
+        )
+    return purchase_request
 
 
 async def decide_purchase_request(
