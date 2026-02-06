@@ -3,6 +3,11 @@
   color: #16212B;
   background-color: #F1F6F8;
   line-height: 1.5;
+  --surface: #FFFFFF;
+  --surface-tint: #F6FAFB;
+  --surface-veil: #EDF3F5;
+  --surface-grad: linear-gradient(135deg, var(--surface) 0%, var(--surface-tint) 70%, var(--surface-veil) 100%);
+  --surface-grad-soft: linear-gradient(135deg, var(--surface) 0%, var(--surface-tint) 100%);
 }
 
 * {
@@ -27,7 +32,7 @@ body {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem 2rem;
-  background: #ffffff;
+  background: var(--surface-grad-soft);
   border-bottom: 1px solid #D9E2E8;
 }
 
@@ -65,7 +70,7 @@ a {
 }
 
 .app-nav {
-  background: #ffffff;
+  background: var(--surface-grad-soft);
   border-right: 1px solid #D9E2E8;
   padding: 1.5rem 1.25rem;
   display: flex;
@@ -116,7 +121,7 @@ a {
 }
 
 .app-header {
-  background: #ffffff;
+  background: var(--surface-grad-soft);
   border-bottom: 1px solid #D9E2E8;
   padding: 1.5rem 2rem;
 }
@@ -136,7 +141,7 @@ a {
 }
 
 .page {
-  background: #ffffff;
+  background: var(--surface-grad);
   border-radius: 0.75rem;
   padding: 2rem 2rem 1.5rem;
   border: 1px solid #D9E2E8;
@@ -220,7 +225,7 @@ a {
   padding: 1.1rem 1.2rem;
   border-radius: 0.85rem;
   border: 1px solid #D9E2E8;
-  background: #ffffff;
+  background: var(--surface-grad);
   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -253,7 +258,7 @@ a {
   padding: 0.45rem 0.9rem;
   border-radius: 999px;
   border: 1px solid #C5D2DB;
-  background: #ffffff;
+  background: var(--surface-grad-soft);
   font-weight: 600;
   color: #16212B;
   transition: background 0.2s ease, border-color 0.2s ease;
@@ -291,7 +296,7 @@ a {
 }
 
 .admin-tab.active {
-  background: #ffffff;
+  background: var(--surface-grad-soft);
   border-color: #9FE3E2;
   border-bottom-color: transparent;
   color: #0EA5A4;
@@ -320,7 +325,7 @@ a {
   align-items: center;
   justify-content: center;
   padding: 2.5rem 1.5rem;
-  background: radial-gradient(circle at top, #ffffff 0%, #E0F7F6 45%, #D9E2E8 100%);
+  background: radial-gradient(circle at top, #FFFFFF 0%, #E0F7F6 45%, #D9E2E8 100%);
 }
 
 .auth-page {
@@ -561,7 +566,7 @@ a {
   font-family: inherit;
   width: 100%;
   min-width: 0;
-  background: #ffffff;
+  background: var(--surface-grad-soft);
 }
 
 .form-field textarea {
@@ -720,7 +725,7 @@ a {
   border-radius: 0.6rem;
   border: none;
   background: #0EA5A4;
-  color: #ffffff;
+  color: #FFFFFF;
   font-weight: 600;
   cursor: pointer;
 }
@@ -825,7 +830,7 @@ a {
   padding: 0.75rem;
   border-radius: 0.65rem;
   border: 1px solid #C5D2DB;
-  background: #ffffff;
+  background: var(--surface-grad-soft);
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -879,7 +884,7 @@ a {
 }
 
 .modal-card {
-  background: #ffffff;
+  background: var(--surface-grad);
   border-radius: 0.85rem;
   border: 1px solid #D9E2E8;
   padding: 1.5rem;
@@ -924,7 +929,7 @@ a {
     z-index: 10;
     border-right: none;
     border-bottom: 1px solid #D9E2E8;
-    background: #ffffff;
+    background: var(--surface-grad-soft);
   }
 
   .app-main {
@@ -948,4 +953,6 @@ a {
     bottom: 1rem;
   }
 }
+
+
 
