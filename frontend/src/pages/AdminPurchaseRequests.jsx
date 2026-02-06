@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { apiRequest } from "../api/client.js";
 import AdminNav from "../components/AdminNav.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 const STATUS_LABELS = {
   pending: "Ожидает решения",
@@ -106,6 +107,7 @@ export default function AdminPurchaseRequests() {
   const [error, setError] = useState("");
   const [decisionError, setDecisionError] = useState("");
   const [decidingIds, setDecidingIds] = useState({});
+  const toast = useToast();
 
   const adminLabel = user?.full_name || user?.email;
 
@@ -138,6 +140,17 @@ export default function AdminPurchaseRequests() {
     loadRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      setError("");
+    }
+    if (decisionError) {
+      toast.error(decisionError);
+      setDecisionError("");
+    }
+  }, [decisionError, error, toast]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -286,17 +299,6 @@ export default function AdminPurchaseRequests() {
         </div>
         <div className="summary">{statusSummary}</div>
       </form>
-
-      {error && (
-        <div className="form-error" role="alert">
-          {error}
-        </div>
-      )}
-      {decisionError && (
-        <div className="form-error" role="alert">
-          {decisionError}
-        </div>
-      )}
 
       {loading ? (
         <div className="form-hint">Загрузка заявок...</div>

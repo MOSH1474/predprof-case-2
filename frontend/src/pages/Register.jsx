@@ -1,6 +1,7 @@
-﻿import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -14,6 +15,14 @@ export default function Register() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { registerStudent } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      setError("");
+    }
+  }, [error, toast]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -112,11 +121,6 @@ export default function Register() {
             required
           />
         </label>
-        {error && (
-          <div className="form-error" role="alert">
-            {error}
-          </div>
-        )}
         <button type="submit" className="primary-button" disabled={isSubmitting}>
           {isSubmitting ? "Создаем..." : "Зарегистрироваться"}
         </button>
@@ -128,3 +132,5 @@ export default function Register() {
     </section>
   );
 }
+
+

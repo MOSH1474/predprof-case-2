@@ -1,6 +1,7 @@
-﻿import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 export default function Login() {
   const [form, setForm] = useState({ login: "", password: "" });
@@ -8,6 +9,14 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { loginWithCredentials } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      setError("");
+    }
+  }, [error, toast]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -73,11 +82,6 @@ export default function Login() {
             required
           />
         </label>
-        {error && (
-          <div className="form-error" role="alert">
-            {error}
-          </div>
-        )}
         <button type="submit" className="primary-button" disabled={isSubmitting}>
           {isSubmitting ? "Входим..." : "Войти"}
         </button>
@@ -89,3 +93,5 @@ export default function Login() {
     </section>
   );
 }
+
+

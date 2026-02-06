@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { apiRequest } from "../api/client.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 const MEAL_TYPE_LABELS = {
   breakfast: "Завтрак",
@@ -198,6 +199,7 @@ export default function StudentMenu() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewFormError, setReviewFormError] = useState("");
   const [reviewNotice, setReviewNotice] = useState(null);
+  const toast = useToast();
 
   const sortedMenus = useMemo(() => {
     return [...menus].sort((a, b) => {
@@ -405,6 +407,61 @@ export default function StudentMenu() {
 
     loadData();
   }, [token, user?.id, user?.role]);
+
+  useEffect(() => {
+    if (loadError) {
+      toast.error(loadError);
+      setLoadError("");
+    }
+    if (menuPaymentError) {
+      toast.error(menuPaymentError);
+      setMenuPaymentError("");
+    }
+    if (menuPaymentSuccess) {
+      toast.success(menuPaymentSuccess);
+      setMenuPaymentSuccess("");
+    }
+    if (subscriptionError) {
+      toast.error(subscriptionError);
+      setSubscriptionError("");
+    }
+    if (subscriptionSuccess) {
+      toast.success(subscriptionSuccess);
+      setSubscriptionSuccess("");
+    }
+    if (mealConfirmError) {
+      toast.error(mealConfirmError);
+      setMealConfirmError("");
+    }
+    if (mealConfirmSuccess) {
+      toast.success(mealConfirmSuccess);
+      setMealConfirmSuccess("");
+    }
+    if (reviewsError) {
+      toast.error(reviewsError);
+      setReviewsError("");
+    }
+    if (reviewFormError) {
+      toast.error(reviewFormError);
+      setReviewFormError("");
+    }
+    if (reviewNotice) {
+      toast.success(reviewNotice.message || reviewNotice);
+      setReviewNotice(null);
+    }
+  }, [
+    loadError,
+    mealConfirmError,
+    mealConfirmSuccess,
+    menuPaymentError,
+    menuPaymentSuccess,
+    reviewFormError,
+    reviewNotice,
+    reviewsError,
+    subscriptionError,
+    subscriptionSuccess,
+    toast,
+  ]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -806,13 +863,6 @@ export default function StudentMenu() {
             const myReview = reviewKey ? myReviewMap.get(reviewKey) : null;
             const isActiveReview =
               activeReviewForm?.menuId === menu.id && activeReviewForm?.dishId === dishId;
-            const notice =
-              reviewNotice &&
-              reviewNotice.menuId === menu.id &&
-              reviewNotice.dishId === dishId
-                ? reviewNotice.message
-                : "";
-
             return (
               <div
                 key={item.id}
@@ -879,11 +929,6 @@ export default function StudentMenu() {
                             />
                           </label>
                         </div>
-                        {reviewFormError && (
-                          <div className="form-error" role="alert">
-                            {reviewFormError}
-                          </div>
-                        )}
                         <div className="button-row">
                           <button
                             type="submit"
@@ -913,7 +958,6 @@ export default function StudentMenu() {
                         </button>
                       </div>
                     )}
-                    {notice && <div className="form-success">{notice}</div>}
                   </div>
                 )}
               </div>
@@ -984,46 +1028,12 @@ export default function StudentMenu() {
         </div>
       </header>
 
-      {loadError && (
-        <div className="form-error" role="alert" style={{ marginTop: "1rem" }}>
-          {loadError}
-        </div>
-      )}
-
       <div
         className={`subscription-banner subscription-${subscriptionStatus}`}
         style={{ marginTop: "0.75rem" }}
       >
         {subscriptionText}
       </div>
-
-      {subscriptionSuccess && (
-        <div className="form-success" style={{ marginTop: "1rem" }}>
-          {subscriptionSuccess}
-        </div>
-      )}
-
-      {menuPaymentSuccess && (
-        <div className="form-success" style={{ marginTop: "1rem" }}>
-          {menuPaymentSuccess}
-        </div>
-      )}
-      {menuPaymentError && !activeMenu && (
-        <div className="form-error" role="alert" style={{ marginTop: "1rem" }}>
-          {menuPaymentError}
-        </div>
-      )}
-
-      {mealConfirmSuccess && (
-        <div className="form-success" style={{ marginTop: "1rem" }}>
-          {mealConfirmSuccess}
-        </div>
-      )}
-      {mealConfirmError && (
-        <div className="form-error" role="alert" style={{ marginTop: "1rem" }}>
-          {mealConfirmError}
-        </div>
-      )}
 
       <div className="form-group" style={{ marginTop: "1.5rem" }}>
         <h3>Доступные меню</h3>
@@ -1125,11 +1135,6 @@ export default function StudentMenu() {
               </button>
             </div>
 
-            {reviewsError && (
-              <div className="form-error" role="alert">
-                {reviewsError}
-              </div>
-            )}
             {reviewsLoading && (
               <div className="form-hint">Загружаем отзывы...</div>
             )}
@@ -1219,12 +1224,6 @@ export default function StudentMenu() {
                 отправляются на сервер.
               </div>
 
-              {menuPaymentError && (
-                <div className="form-error" role="alert">
-                  {menuPaymentError}
-                </div>
-              )}
-
               <div className="button-row">
                 <button
                   type="submit"
@@ -1308,12 +1307,6 @@ export default function StudentMenu() {
                 onChange={handleSubscriptionChange}
                 disabled={subscriptionPaying}
               />
-
-              {subscriptionError && (
-                <div className="form-error" role="alert">
-                  {subscriptionError}
-                </div>
-              )}
 
               <div className="button-row">
                 <button

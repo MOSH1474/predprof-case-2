@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import CookNav from "../components/CookNav.jsx";
 import { apiRequest } from "../api/client.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 const MEAL_TYPE_LABELS = {
   breakfast: "Завтрак",
@@ -81,6 +82,7 @@ export default function CookMeals() {
   const [preferencesLoading, setPreferencesLoading] = useState(false);
   const [usersById, setUsersById] = useState({});
   const [usersLoading, setUsersLoading] = useState(false);
+  const toast = useToast();
 
   const issueStats = useMemo(() => {
     return issues.reduce(
@@ -118,6 +120,21 @@ export default function CookMeals() {
     };
     loadMenus();
   }, [token]);
+
+  useEffect(() => {
+    if (loadError) {
+      toast.error(loadError);
+      setLoadError("");
+    }
+    if (actionError) {
+      toast.error(actionError);
+      setActionError("");
+    }
+    if (actionSuccess) {
+      toast.success(actionSuccess);
+      setActionSuccess("");
+    }
+  }, [actionError, actionSuccess, loadError, toast]);
 
   const loadIssues = async (nextFilters = filters) => {
     setLoading(true);
@@ -445,14 +462,7 @@ export default function CookMeals() {
           </div>
         </div>
 
-        {actionError && (
-          <div className="form-error" role="alert">
-            {actionError}
-          </div>
-        )}
-        {actionSuccess && <div className="form-success">{actionSuccess}</div>}
-
-        <div className="button-row">
+<div className="button-row">
           <button
             type="submit"
             className="primary-button"
@@ -465,12 +475,7 @@ export default function CookMeals() {
 
       <div className="form-group">
         <h3>Список выдач</h3>
-        {loadError && (
-          <div className="form-error" role="alert">
-            {loadError}
-          </div>
-        )}
-        {loading ? (
+{loading ? (
           <div className="form-hint">Загружаем выдачи...</div>
         ) : (
           <div className="data-grid">
@@ -484,3 +489,5 @@ export default function CookMeals() {
     </section>
   );
 }
+
+

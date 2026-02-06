@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import CookNav from "../components/CookNav.jsx";
 import { apiRequest } from "../api/client.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 const buildProductForm = () => ({
   name: "",
@@ -51,6 +52,7 @@ export default function CookStock() {
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const toast = useToast();
 
   const productMap = useMemo(() => {
     return new Map(products.map((product) => [product.id, product]));
@@ -81,6 +83,21 @@ export default function CookStock() {
     }
     loadData();
   }, [token]);
+
+  useEffect(() => {
+    if (loadError) {
+      toast.error(loadError);
+      setLoadError("");
+    }
+    if (formError) {
+      toast.error(formError);
+      setFormError("");
+    }
+    if (formSuccess) {
+      toast.success(formSuccess);
+      setFormSuccess("");
+    }
+  }, [formError, formSuccess, loadError, toast]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -263,14 +280,7 @@ export default function CookStock() {
       </header>
 
       <CookNav />
-
-      {loadError && (
-        <div className="form-error" role="alert">
-          {loadError}
-        </div>
-      )}
-
-      <div className="form-group">
+<div className="form-group">
         <h3>Остатки на складе</h3>
         {loading ? (
           <div className="form-hint">Загружаем склад...</div>
@@ -351,15 +361,7 @@ export default function CookStock() {
             placeholder="Например: списание на завтраки"
           />
         </label>
-
-        {formError && (
-          <div className="form-error" role="alert">
-            {formError}
-          </div>
-        )}
-        {formSuccess && <div className="form-success">{formSuccess}</div>}
-
-        <div className="button-row">
+<div className="button-row">
           <button type="submit" className="primary-button" disabled={submitting}>
             {submitting ? "Сохраняем..." : "Сохранить операцию"}
           </button>
@@ -404,15 +406,7 @@ export default function CookStock() {
             </label>
           </div>
         </div>
-
-        {formError && (
-          <div className="form-error" role="alert">
-            {formError}
-          </div>
-        )}
-        {formSuccess && <div className="form-success">{formSuccess}</div>}
-
-        <div className="button-row">
+<div className="button-row">
           <button type="submit" className="secondary-button" disabled={submitting}>
             {submitting ? "Добавляем..." : "Добавить продукт"}
           </button>
@@ -560,3 +554,5 @@ export default function CookStock() {
     </section>
   );
 }
+
+
