@@ -250,7 +250,7 @@ export default function AdminReports() {
         "Ожидает выдачи",
         "Выдано",
         "Подтверждено",
-        "того",
+        "Итого",
       ],
     ];
     nutritionReport.items.forEach((item) => {
@@ -265,7 +265,7 @@ export default function AdminReports() {
       ]);
     });
     rows.push([
-      "того",
+      "Итого",
       "",
       nutritionTotals.issued,
       nutritionTotals.served,
@@ -292,7 +292,7 @@ export default function AdminReports() {
     });
     rows.push([
       "",
-      "того",
+      "Итого",
       expenseReport.total_quantity,
       expenseReport.total_amount,
     ]);
@@ -523,11 +523,11 @@ export default function AdminReports() {
         <>
           <div className="option-grid" style={{ marginTop: "1rem" }}>
             <div className="option-card">
-              <strong>того количество</strong>
+              <strong>Итого количество</strong>
               <span>{expenseReport.total_quantity}</span>
             </div>
             <div className="option-card">
-              <strong>того сумма</strong>
+              <strong>Итого сумма</strong>
               <span>{formatMoney(expenseReport.total_amount)}</span>
             </div>
           </div>

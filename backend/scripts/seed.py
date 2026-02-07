@@ -349,6 +349,11 @@ async def main() -> None:
         await ensure_user_allergy(db, student.id, allergy_milk.id)
 
         today = date.today()
+        if today.day <= 12:
+            sub_start = date(today.year, today.month, 12)
+        else:
+            next_month = (today.replace(day=28) + timedelta(days=4)).replace(day=1)
+            sub_start = date(next_month.year, next_month.month, 12)
         breakfast = await get_or_create_menu(
             db,
             today,
@@ -393,7 +398,7 @@ async def main() -> None:
         await ensure_purchase_requests(db, cook, admin, product_rice)
         await ensure_review(db, student, dish_oat, breakfast)
         await ensure_notification(db, admin, student)
-        await ensure_payments_and_issues(db, student, cook, breakfast, today + timedelta(days=1))
+        await ensure_payments_and_issues(db, student, cook, breakfast, sub_start)
 
         print("Seed completed.")
         print("Users: admin@example.com / cook@example.com / student@example.com")
