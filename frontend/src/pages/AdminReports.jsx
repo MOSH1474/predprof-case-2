@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { apiRequest } from "../api/client.js";
 import AdminNav from "../components/AdminNav.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 const MEAL_TYPE_LABELS = {
   breakfast: "Завтрак",
@@ -92,6 +93,7 @@ export default function AdminReports() {
   const [nutritionError, setNutritionError] = useState("");
   const [expenseError, setExpenseError] = useState("");
   const [productError, setProductError] = useState("");
+  const toast = useToast();
 
   const adminLabel = user?.full_name || user?.email;
 
@@ -164,6 +166,21 @@ export default function AdminReports() {
     loadProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  useEffect(() => {
+    if (nutritionError) {
+      toast.error(nutritionError);
+      setNutritionError("");
+    }
+    if (expenseError) {
+      toast.error(expenseError);
+      setExpenseError("");
+    }
+    if (productError) {
+      toast.error(productError);
+      setProductError("");
+    }
+  }, [expenseError, nutritionError, productError, toast]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -381,14 +398,7 @@ export default function AdminReports() {
           </button>
         </div>
       </form>
-
-      {nutritionError && (
-        <div className="form-error" role="alert">
-          {nutritionError}
-        </div>
-      )}
-
-      {nutritionReport && (
+{nutritionReport && (
         <>
           <div className="option-grid" style={{ marginTop: "1rem" }}>
             <div className="option-card">
@@ -484,8 +494,7 @@ export default function AdminReports() {
             {loadingProducts && (
               <span className="form-hint">Загружаем список продуктов...</span>
             )}
-            {productError && <span className="form-hint">{productError}</span>}
-          </label>
+</label>
         </div>
 
         <div className="button-row">
@@ -510,14 +519,7 @@ export default function AdminReports() {
           </button>
         </div>
       </form>
-
-      {expenseError && (
-        <div className="form-error" role="alert">
-          {expenseError}
-        </div>
-      )}
-
-      {expenseReport && (
+{expenseReport && (
         <>
           <div className="option-grid" style={{ marginTop: "1rem" }}>
             <div className="option-card">
@@ -557,3 +559,5 @@ export default function AdminReports() {
     </section>
   );
 }
+
+

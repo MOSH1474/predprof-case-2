@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { apiRequest } from "../api/client.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 const MEAL_TYPE_LABELS = {
   breakfast: "Завтрак",
@@ -135,6 +136,7 @@ export default function StudentPay() {
   const [subscriptionSuccess, setSubscriptionSuccess] = useState("");
   const [subscriptionPaying, setSubscriptionPaying] = useState(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const toast = useToast();
 
   const sortedMenus = useMemo(() => {
     return [...menus].sort((a, b) => {
@@ -219,6 +221,36 @@ export default function StudentPay() {
 
     loadData();
   }, [token]);
+
+  useEffect(() => {
+    if (loadError) {
+      toast.error(loadError);
+      setLoadError("");
+    }
+    if (menuPaymentError) {
+      toast.error(menuPaymentError);
+      setMenuPaymentError("");
+    }
+    if (menuPaymentSuccess) {
+      toast.success(menuPaymentSuccess);
+      setMenuPaymentSuccess("");
+    }
+    if (subscriptionError) {
+      toast.error(subscriptionError);
+      setSubscriptionError("");
+    }
+    if (subscriptionSuccess) {
+      toast.success(subscriptionSuccess);
+      setSubscriptionSuccess("");
+    }
+  }, [
+    loadError,
+    menuPaymentError,
+    menuPaymentSuccess,
+    subscriptionError,
+    subscriptionSuccess,
+    toast,
+  ]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -384,12 +416,6 @@ export default function StudentPay() {
         </div>
       </header>
 
-      {loadError && (
-        <div className="form-error" role="alert" style={{ marginTop: "1rem" }}>
-          {loadError}
-        </div>
-      )}
-
       <div className="summary" style={{ marginTop: "1rem" }}>
         {activeSubscription ? (
           <>
@@ -404,12 +430,6 @@ export default function StudentPay() {
           </>
         )}
       </div>
-
-      {subscriptionSuccess && (
-        <div className="form-success" style={{ marginTop: "1rem" }}>
-          {subscriptionSuccess}
-        </div>
-      )}
 
       <div className="form-group" style={{ marginTop: "1.5rem" }}>
         <h3>Абонемент</h3>
@@ -435,8 +455,6 @@ export default function StudentPay() {
           Если меню не входит в период абонемента, его можно оплатить отдельно.
         </p>
       </div>
-
-      {menuPaymentSuccess && <div className="form-success">{menuPaymentSuccess}</div>}
 
       {loading ? (
         <div className="form-hint">Загружаем меню...</div>
@@ -501,12 +519,6 @@ export default function StudentPay() {
                       Это демонстрационная форма. Данные не сохраняются и не
                       отправляются на сервер.
                     </div>
-
-                    {menuPaymentError && (
-                      <div className="form-error" role="alert">
-                        {menuPaymentError}
-                      </div>
-                    )}
 
                     <div className="button-row">
                       <button
@@ -588,13 +600,7 @@ export default function StudentPay() {
                 disabled={subscriptionPaying}
               />
 
-              {subscriptionError && (
-                <div className="form-error" role="alert">
-                  {subscriptionError}
-                </div>
-              )}
-
-              <div className="button-row">
+                <div className="button-row">
                 <button
                   type="submit"
                   className="primary-button"

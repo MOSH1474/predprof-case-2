@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import CookNav from "../components/CookNav.jsx";
 import { apiRequest } from "../api/client.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 const MEAL_TYPE_LABELS = {
   breakfast: "Завтрак",
@@ -88,6 +89,7 @@ export default function CookMenus() {
   const [dishEditForm, setDishEditForm] = useState(buildDishEditForm);
   const [savingDishId, setSavingDishId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const toast = useToast();
 
   const dishMap = useMemo(() => {
     return new Map(dishes.map((dish) => [dish.id, dish]));
@@ -130,6 +132,21 @@ export default function CookMenus() {
     }
     loadData();
   }, [token]);
+
+  useEffect(() => {
+    if (loadError) {
+      toast.error(loadError);
+      setLoadError("");
+    }
+    if (formError) {
+      toast.error(formError);
+      setFormError("");
+    }
+    if (formSuccess) {
+      toast.success(formSuccess);
+      setFormSuccess("");
+    }
+  }, [formError, formSuccess, loadError, toast]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -435,7 +452,7 @@ export default function CookMenus() {
     const edits = menuEdits[menu.id] || {};
     if (Object.keys(edits).length === 0) {
       setFormError("");
-      setFormSuccess("Изменений нет.");
+      setFormSuccess("зменений нет.");
       return;
     }
     let validationError = "";
@@ -671,14 +688,7 @@ export default function CookMenus() {
       </header>
 
       <CookNav />
-
-      {loadError && (
-        <div className="form-error" role="alert">
-          {loadError}
-        </div>
-      )}
-
-      <form className="auth-form" onSubmit={handleDishSubmit}>
+<form className="auth-form" onSubmit={handleDishSubmit}>
         <div className="form-group">
           <h3>Новое блюдо</h3>
           <div className="option-grid">
@@ -724,14 +734,7 @@ export default function CookMenus() {
           </div>
         </div>
 
-        {formError && (
-          <div className="form-error" role="alert">
-            {formError}
-          </div>
-        )}
-        {formSuccess && <div className="form-success">{formSuccess}</div>}
-
-        <div className="button-row">
+<div className="button-row">
           <button type="submit" className="secondary-button" disabled={submitting}>
             {submitting ? "Сохраняем..." : "Добавить блюдо"}
           </button>
@@ -1004,14 +1007,7 @@ export default function CookMenus() {
           </div>
         )}
 
-        {formError && (
-          <div className="form-error" role="alert">
-            {formError}
-          </div>
-        )}
-        {formSuccess && <div className="form-success">{formSuccess}</div>}
-
-        <div className="button-row">
+<div className="button-row">
           <button type="submit" className="primary-button" disabled={submitting}>
             {submitting ? "Сохраняем..." : "Создать меню"}
           </button>
@@ -1034,3 +1030,5 @@ export default function CookMenus() {
     </section>
   );
 }
+
+

@@ -1,8 +1,9 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { apiRequest } from "../api/client.js";
 import CookNav from "../components/CookNav.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 const buildForm = () => ({
   name: "",
@@ -20,6 +21,7 @@ export default function CookAllergies() {
   const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const toast = useToast();
 
   const loadAllergies = async () => {
     if (!token) {
@@ -44,6 +46,17 @@ export default function CookAllergies() {
     loadAllergies();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      setError("");
+    }
+    if (success) {
+      toast.success(success);
+      setSuccess("");
+    }
+  }, [error, success, toast]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -203,13 +216,6 @@ export default function CookAllergies() {
             </label>
           </div>
         </div>
-
-        {error && (
-          <div className="form-error" role="alert">
-            {error}
-          </div>
-        )}
-        {success && <div className="form-success">{success}</div>}
 
         <div className="button-row">
           <button

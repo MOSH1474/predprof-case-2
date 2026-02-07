@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../api/client.js";
 
 const AuthContext = createContext(null);
@@ -6,11 +6,46 @@ const AuthContext = createContext(null);
 const TOKEN_KEY = "canteen_token";
 const USER_KEY = "canteen_user";
 
+const decodeJwtPayload = (token) => {
+  if (!token) {
+    return null;
+  }
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    return null;
+  }
+  const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+  const padded = payload.padEnd(payload.length + ((4 - (payload.length % 4)) % 4), "=");
+  try {
+    const decoded = window.atob(padded);
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+};
+
+const isTokenExpired = (token) => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const payload = decodeJwtPayload(token);
+  if (!payload || typeof payload.exp !== "number") {
+    return false;
+  }
+  return Date.now() >= payload.exp * 1000;
+};
+
 const loadStoredUser = () => {
   if (typeof window === "undefined") {
     return null;
   }
   try {
+    const token = window.localStorage.getItem(TOKEN_KEY);
+    if (token && isTokenExpired(token)) {
+      window.localStorage.removeItem(USER_KEY);
+      window.localStorage.removeItem(TOKEN_KEY);
+      return null;
+    }
     const raw = window.localStorage.getItem(USER_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
@@ -22,7 +57,13 @@ const loadStoredToken = () => {
   if (typeof window === "undefined") {
     return null;
   }
-  return window.localStorage.getItem(TOKEN_KEY);
+  const token = window.localStorage.getItem(TOKEN_KEY);
+  if (token && isTokenExpired(token)) {
+    window.localStorage.removeItem(USER_KEY);
+    window.localStorage.removeItem(TOKEN_KEY);
+    return null;
+  }
+  return token;
 };
 
 const persistSession = (user, token) => {
@@ -102,6 +143,15 @@ export function AuthProvider({ children }) {
     setToken(null);
     clearSession();
   };
+
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+    if (isTokenExpired(token)) {
+      logout();
+    }
+  }, [token]);
 
   useEffect(() => {
     if (typeof window === "undefined") {

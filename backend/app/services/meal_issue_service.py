@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 from ..models import MealIssue, MealIssueStatus, Menu, User, UserRole
 from ..models.utils import utcnow
 from .errors import raise_http_400, raise_http_404
+from .notification_service import create_notification_for_users
 from .payment_service import is_meal_paid
 
 
@@ -54,6 +55,26 @@ async def list_meal_issues(user_id: int, db: AsyncSession) -> list[MealIssue]:
         select(MealIssue)
         .where(MealIssue.user_id == user_id)
         .order_by(MealIssue.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def list_served_meal_issues_since(
+    user_id: int,
+    since,
+    db: AsyncSession,
+    limit: int = 20,
+) -> list[MealIssue]:
+    result = await db.execute(
+        select(MealIssue)
+        .where(
+            MealIssue.user_id == user_id,
+            MealIssue.status == MealIssueStatus.SERVED,
+            MealIssue.served_at.is_not(None),
+            MealIssue.served_at > since,
+        )
+        .order_by(MealIssue.served_at.asc())
+        .limit(limit)
     )
     return list(result.scalars().all())
 
@@ -136,6 +157,13 @@ async def serve_meal(
             issue.served_at = utcnow()
             await db.commit()
             await db.refresh(issue)
+            await create_notification_for_users(
+                db,
+                title="Питание выдано",
+                body="Питание выдано. Подтвердите получение в личном кабинете.",
+                recipient_ids=[user_id],
+                created_by_id=served_by_id,
+            )
             return issue
         raise_http_400("Некорректный статус выдачи")
 
@@ -157,6 +185,13 @@ async def serve_meal(
     db.add(issue)
     await db.commit()
     await db.refresh(issue)
+    await create_notification_for_users(
+        db,
+        title="Питание выдано",
+        body="Питание выдано. Подтвердите получение в личном кабинете.",
+        recipient_ids=[user_id],
+        created_by_id=served_by_id,
+    )
     return issue
 
 

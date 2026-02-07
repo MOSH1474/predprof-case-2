@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext.jsx";
+import NotificationBell from "./components/NotificationBell.jsx";
+import { ToastProvider } from "./contexts/ToastContext.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
 
 const ROLE_LABELS = {
@@ -31,9 +33,12 @@ function AppShell() {
           <span className="topbar-role">{roleLabel}</span>
           {userLabel && <span className="topbar-name">{userLabel}</span>}
         </div>
-        <button type="button" className="secondary-button" onClick={handleLogout}>
-          Выйти
-        </button>
+        <div className="topbar-actions">
+          <NotificationBell />
+          <button type="button" className="secondary-button" onClick={handleLogout}>
+            Выйти
+          </button>
+        </div>
       </header>
       <main className="app-body">
         <AppRoutes />
@@ -44,8 +49,10 @@ function AppShell() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppShell />
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <AppShell />
+      </AuthProvider>
+    </ToastProvider>
   );
 }

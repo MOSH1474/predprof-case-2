@@ -1,4 +1,4 @@
-﻿import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout.jsx";
 import Cook from "../pages/Cook.jsx";
 import CookAllergies from "../pages/CookAllergies.jsx";

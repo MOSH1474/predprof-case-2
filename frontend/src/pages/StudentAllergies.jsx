@@ -1,7 +1,8 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { apiRequest } from "../api/client.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 const emptyForm = {
   allergyIds: [],
@@ -50,6 +51,7 @@ export default function StudentAllergies() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [initialHadData, setInitialHadData] = useState(false);
+  const toast = useToast();
 
   const selectedAllergies = useMemo(() => {
     return allergies
@@ -91,6 +93,21 @@ export default function StudentAllergies() {
 
     loadData();
   }, [token]);
+
+  useEffect(() => {
+    if (loadError) {
+      toast.error("Не удалось загрузить сохраненные данные. Можно заполнить вручную.");
+      setLoadError(false);
+    }
+    if (error) {
+      toast.error(error);
+      setError("");
+    }
+    if (success) {
+      toast.success(success);
+      setSuccess("");
+    }
+  }, [error, loadError, success, toast]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -184,13 +201,6 @@ export default function StudentAllergies() {
         <div className="form-hint">Загрузка данных...</div>
       ) : (
         <form className="auth-form" onSubmit={handleSubmit}>
-          {loadError && (
-            <div className="form-hint">
-              Не удалось загрузить сохраненные данные. Можно заполнить вручную и
-              сохранить.
-            </div>
-          )}
-
           <div className="form-group">
             <h3>Аллергены</h3>
             <div className="option-grid">
@@ -206,9 +216,7 @@ export default function StudentAllergies() {
               ))}
               {!allergies.length && (
                 <div className="form-hint">
-                  {loadError
-                    ? "Не удалось загрузить список аллергенов."
-                    : "Аллергены пока не добавлены администратором."}
+                  Аллергены пока не добавлены администратором.
                 </div>
               )}
             </div>
@@ -229,13 +237,6 @@ export default function StudentAllergies() {
               placeholder="Например: без мяса, без глютена, постное"
             />
           </label>
-
-          {error && (
-            <div className="form-error" role="alert">
-              {error}
-            </div>
-          )}
-          {success && <div className="form-success">{success}</div>}
 
           <div className="button-row">
             <button

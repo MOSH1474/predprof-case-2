@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { apiRequest } from "../api/client.js";
 import AdminNav from "../components/AdminNav.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 const PAYMENT_STATUS_LABELS = {
   pending: "Ожидает оплаты",
@@ -108,6 +109,7 @@ export default function AdminStats() {
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [paymentError, setPaymentError] = useState("");
   const [attendanceError, setAttendanceError] = useState("");
+  const toast = useToast();
 
   const loadPaymentStats = async (filters = paymentFilters) => {
     if (!token) {
@@ -156,6 +158,17 @@ export default function AdminStats() {
     loadPaymentStats();
     loadAttendanceStats();
   }, [token]);
+
+  useEffect(() => {
+    if (paymentError) {
+      toast.error(paymentError);
+      setPaymentError("");
+    }
+    if (attendanceError) {
+      toast.error(attendanceError);
+      setAttendanceError("");
+    }
+  }, [attendanceError, paymentError, toast]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -273,14 +286,7 @@ export default function AdminStats() {
         </div>
         <div className="summary">{paymentPeriodLabel}</div>
       </form>
-
-      {paymentError && (
-        <div className="form-error" role="alert">
-          {paymentError}
-        </div>
-      )}
-
-      {paymentStats && (
+{paymentStats && (
         <>
           <div className="option-grid" style={{ marginTop: "1rem" }}>
             <div className="option-card">
@@ -381,14 +387,7 @@ export default function AdminStats() {
         </div>
         <div className="summary">{attendancePeriodLabel}</div>
       </form>
-
-      {attendanceError && (
-        <div className="form-error" role="alert">
-          {attendanceError}
-        </div>
-      )}
-
-      {attendanceStats && (
+{attendanceStats && (
         <>
           <div className="option-grid" style={{ marginTop: "1rem" }}>
             <div className="option-card">
@@ -419,3 +418,5 @@ export default function AdminStats() {
     </section>
   );
 }
+
+

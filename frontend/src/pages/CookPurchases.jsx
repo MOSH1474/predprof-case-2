@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import CookNav from "../components/CookNav.jsx";
 import { apiRequest } from "../api/client.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { useToast } from "../contexts/ToastContext.jsx";
 
 const buildItemForm = () => ({
   productId: "",
@@ -37,6 +38,7 @@ export default function CookPurchases() {
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const toast = useToast();
 
   const productMap = useMemo(() => {
     return new Map(products.map((product) => [product.id, product]));
@@ -65,6 +67,21 @@ export default function CookPurchases() {
     }
     loadData();
   }, [token]);
+
+  useEffect(() => {
+    if (loadError) {
+      toast.error(loadError);
+      setLoadError("");
+    }
+    if (formError) {
+      toast.error(formError);
+      setFormError("");
+    }
+    if (formSuccess) {
+      toast.success(formSuccess);
+      setFormSuccess("");
+    }
+  }, [formError, formSuccess, loadError, toast]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
@@ -158,14 +175,7 @@ export default function CookPurchases() {
       </header>
 
       <CookNav />
-
-      {loadError && (
-        <div className="form-error" role="alert">
-          {loadError}
-        </div>
-      )}
-
-      <form className="auth-form" onSubmit={handleSubmitRequest}>
+<form className="auth-form" onSubmit={handleSubmitRequest}>
         <div className="form-group">
           <h3>Новая заявка</h3>
           <div className="option-grid">
@@ -262,14 +272,7 @@ export default function CookPurchases() {
           />
         </label>
 
-        {formError && (
-          <div className="form-error" role="alert">
-            {formError}
-          </div>
-        )}
-        {formSuccess && <div className="form-success">{formSuccess}</div>}
-
-        <div className="button-row">
+<div className="button-row">
           <button type="submit" className="primary-button" disabled={submitting}>
             {submitting ? "Отправляем..." : "Отправить заявку"}
           </button>
@@ -317,3 +320,5 @@ export default function CookPurchases() {
     </section>
   );
 }
+
+
