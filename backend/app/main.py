@@ -1,5 +1,6 @@
 ﻿from fastapi import FastAPI
 
+from .config import settings
 from .docs import public_docs
 from .routers import (
     admin_reports_router,
@@ -71,7 +72,7 @@ OPENAPI_TAGS = [
 app = FastAPI(
     title="API школьной столовой",
     description=APP_DESCRIPTION,
-    root_path="/api/v1",
+    root_path=settings.root_path,
     openapi_tags=OPENAPI_TAGS,
 )
 app.include_router(admin_reports_router)

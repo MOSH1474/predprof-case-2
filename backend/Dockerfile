@@ -7,7 +7,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app"
 
 COPY backend/pyproject.toml backend/uv.lock backend/README.md /app/
-RUN pip install --no-cache-dir uv && uv sync --no-dev
+RUN pip install --no-cache-dir uv && uv sync --frozen --no-dev
 
 COPY backend /app
 

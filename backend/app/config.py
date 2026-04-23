@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     db_password: str = Field(default="app", alias="DB_PASSWORD")
     db_port: int = Field(default=5432, alias="DB_PORT")
     db_name: str = Field(default="app", alias="DB_NAME")
+    root_path: str = Field(default="", alias="ROOT_PATH")
     jwt_secret: str = Field(default="change-me", alias="JWT_SECRET")
     jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
     access_token_exp_minutes: int = Field(default=60, alias="ACCESS_TOKEN_EXP_MINUTES")

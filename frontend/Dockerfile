@@ -3,16 +3,15 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-COPY frontend/package.json /app/package.json
-RUN --mount=type=cache,target=/root/.npm npm install --no-audit --no-fund
+COPY frontend/package.json frontend/package-lock.json /app/
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 COPY frontend /app
 RUN npm run build
 
-FROM nginx:alpine
+FROM caddy:2-alpine
 
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY frontend/Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /app/dist /srv
 
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 80 443

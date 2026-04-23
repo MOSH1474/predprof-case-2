@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER:-app}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-app}
@@ -12,13 +13,10 @@ services:
       retries: 10
     volumes:
       - db_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    image: ${BACKEND_IMAGE}
+    restart: unless-stopped
     command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
     environment:
       DB_HOST: db
@@ -26,24 +24,30 @@ services:
       DB_NAME: ${DB_NAME:-app}
       DB_USER: ${DB_USER:-app}
       DB_PASSWORD: ${DB_PASSWORD:-app}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXP_MINUTES: ${ACCESS_TOKEN_EXP_MINUTES:-60}
       ROOT_PATH: ${ROOT_PATH:-/api}
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
 
   frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
+    image: ${FRONTEND_IMAGE}
+    restart: unless-stopped
+    environment:
+      APP_HOST: ${APP_HOST}
+      API_UPSTREAM: backend:8000
     depends_on:
       - backend
-    environment:
-      APP_HOST: ${APP_HOST:-:80}
-      API_UPSTREAM: backend:8000
     ports:
-      - "${FRONTEND_PORT:-5173}:80"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
 
 volumes:
+  caddy_config:
+  caddy_data:
   db_data:
