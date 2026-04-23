@@ -71,8 +71,9 @@ async def list_menus(
     meal_type: MealType | None = None,
 ) -> list[Menu]:
     stmt = _menu_query_with_items()
-    if date_from:
-        stmt = stmt.where(Menu.menu_date >= date_from)
+    today = date.today()
+    effective_date_from = max(date_from, today) if date_from else today
+    stmt = stmt.where(Menu.menu_date >= effective_date_from)
     if date_to:
         stmt = stmt.where(Menu.menu_date <= date_to)
     if meal_type is not None:

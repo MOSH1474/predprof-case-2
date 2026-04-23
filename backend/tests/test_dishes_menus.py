@@ -1,5 +1,5 @@
 import uuid
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
@@ -84,6 +84,7 @@ async def test_student_cannot_create_dish(client, db_session):
 async def test_menu_flow_with_dishes(client, db_session):
     _, cook_token = await _create_user(db_session, UserRole.COOK)
     _, student_token = await _create_user(db_session, UserRole.STUDENT)
+    menu_date = date.today() + timedelta(days=1)
 
     dish_response = await client.post(
         "/dishes/",
@@ -97,7 +98,7 @@ async def test_menu_flow_with_dishes(client, db_session):
         "/menus/",
         headers=_auth_headers(cook_token),
         json={
-            "menu_date": date(2025, 1, 1).isoformat(),
+            "menu_date": menu_date.isoformat(),
             "meal_type": "breakfast",
             "title": "Breakfast",
             "price": "120.00",
@@ -136,9 +137,47 @@ async def test_menu_flow_with_dishes(client, db_session):
         "/menus/",
         headers=_auth_headers(student_token),
         json={
-            "menu_date": date(2025, 1, 2).isoformat(),
+            "menu_date": (menu_date + timedelta(days=1)).isoformat(),
             "meal_type": "lunch",
             "items": [{"dish_id": dish_id}],
         },
     )
     assert forbidden_response.status_code == 403
+
+
+@pytest.mark.anyio
+async def test_menu_list_excludes_past_menus(client, db_session):
+    _, cook_token = await _create_user(db_session, UserRole.COOK)
+    _, student_token = await _create_user(db_session, UserRole.STUDENT)
+
+    dish_response = await client.post(
+        "/dishes/",
+        headers=_auth_headers(cook_token),
+        json={"name": f"Dish {uuid.uuid4()}", "description": "Menu item"},
+    )
+    assert dish_response.status_code == 201
+    dish_id = dish_response.json()["id"]
+
+    yesterday = date.today() - timedelta(days=1)
+    tomorrow = date.today() + timedelta(days=1)
+
+    for menu_date, meal_type in ((yesterday, "breakfast"), (tomorrow, "lunch")):
+        response = await client.post(
+            "/menus/",
+            headers=_auth_headers(cook_token),
+            json={
+                "menu_date": menu_date.isoformat(),
+                "meal_type": meal_type,
+                "title": f"Menu {menu_date.isoformat()}",
+                "items": [{"dish_id": dish_id}],
+            },
+        )
+        assert response.status_code == 201
+
+    list_response = await client.get("/menus/", headers=_auth_headers(student_token))
+    assert list_response.status_code == 200
+
+    items = list_response.json()["items"]
+    assert all(item["menu_date"] >= date.today().isoformat() for item in items)
+    assert any(item["menu_date"] == tomorrow.isoformat() for item in items)
+    assert all(item["menu_date"] != yesterday.isoformat() for item in items)

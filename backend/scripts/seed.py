@@ -34,8 +34,10 @@ from app.models import (
 from app.models.associations import user_allergies
 from app.models.utils import utcnow
 from app.services.meal_issue_service import confirm_meal, serve_meal
-from app.services.payment_service import create_one_time_payment, create_subscription_payment
+from app.services.payment_service import create_one_time_payment
 from app.services.security import hash_password
+
+SEED_MENU_START_DATE = date(2026, 4, 24)
 
 
 async def get_or_create_user(
@@ -273,7 +275,7 @@ async def ensure_user_allergy(db: AsyncSession, user_id: int, allergy_id: int) -
 
 
 async def ensure_payments_and_issues(
-    db: AsyncSession, student: User, cook: User, one_time_menu: Menu, sub_start: date
+    db: AsyncSession, student: User, cook: User, one_time_menu: Menu
 ) -> None:
     result = await db.execute(
         select(Payment).where(
@@ -285,19 +287,6 @@ async def ensure_payments_and_issues(
     )
     if result.scalar_one_or_none() is None:
         await create_one_time_payment(student.id, one_time_menu.id, db)
-
-    period_end = sub_start + timedelta(days=2)
-    result = await db.execute(
-        select(Payment).where(
-            Payment.user_id == student.id,
-            Payment.payment_type == PaymentType.SUBSCRIPTION,
-            Payment.period_start == sub_start,
-            Payment.period_end == period_end,
-            Payment.status == PaymentStatus.PAID,
-        )
-    )
-    if result.scalar_one_or_none() is None:
-        await create_subscription_payment(student.id, sub_start, period_end, db)
 
     issue_result = await db.execute(
         select(MealIssue).where(
@@ -348,15 +337,10 @@ async def main() -> None:
 
         await ensure_user_allergy(db, student.id, allergy_milk.id)
 
-        today = date.today()
-        if today.day <= 12:
-            sub_start = date(today.year, today.month, 12)
-        else:
-            next_month = (today.replace(day=28) + timedelta(days=4)).replace(day=1)
-            sub_start = date(next_month.year, next_month.month, 12)
+        menu_start = max(date.today(), SEED_MENU_START_DATE)
         breakfast = await get_or_create_menu(
             db,
-            today,
+            menu_start,
             MealType.BREAKFAST,
             "Завтрак",
             Decimal("120.00"),
@@ -364,7 +348,7 @@ async def main() -> None:
         )
         await get_or_create_menu(
             db,
-            today,
+            menu_start,
             MealType.LUNCH,
             "Обед",
             Decimal("150.00"),
@@ -372,7 +356,7 @@ async def main() -> None:
         )
         await get_or_create_menu(
             db,
-            today + timedelta(days=1),
+            menu_start + timedelta(days=1),
             MealType.LUNCH,
             "Обед завтра",
             Decimal("155.00"),
@@ -380,7 +364,7 @@ async def main() -> None:
         )
         await get_or_create_menu(
             db,
-            today + timedelta(days=2),
+            menu_start + timedelta(days=2),
             MealType.LUNCH,
             "Обед послезавтра",
             Decimal("160.00"),
@@ -398,7 +382,7 @@ async def main() -> None:
         await ensure_purchase_requests(db, cook, admin, product_rice)
         await ensure_review(db, student, dish_oat, breakfast)
         await ensure_notification(db, admin, student)
-        await ensure_payments_and_issues(db, student, cook, breakfast, sub_start)
+        await ensure_payments_and_issues(db, student, cook, breakfast)
 
         print("Seed completed.")
         print("Users: admin@example.com / cook@example.com / student@example.com")
